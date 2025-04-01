@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const continuePromptDiv = document.getElementById('viva-continue-prompt'); // Keep prompt reference
     const continueBtn = document.getElementById('viva-continue-btn'); // Keep button reference
     const forceEndBtn = document.getElementById('viva-force-end-btn'); // Keep button reference
+    const menuToggle = document.getElementById('menu-toggle'); // Mobile menu button
+    const sidebar = document.querySelector('.sidebar'); // Sidebar element
+    const overlay = document.querySelector('.overlay'); // Overlay element
 
     // --- State Variables ---
     let activeHintPopup = null;
@@ -66,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setupButtons(); // Restore buttons (includes auth buttons now)
             setupHints(); // Call hint setup directly
             setupAuth(); // Setup authentication listeners and initial state
+            setupMobileToggle(); // Setup mobile sidebar toggle
             loadSavedData(); // Restore loading saved data (will need modification later for server)
             ensureInitialEntries(); // Ensure at least one med/allergy entry exists visually
             updateVivaButtonState(); // Restore Viva button state check (might depend on login now)
@@ -100,6 +104,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`DEBUG: Nav item clicked: ${sectionId}`);
                 showSection(sectionId);
                 updateActiveNav(item);
+                // Close sidebar on mobile after selection
+                if (window.innerWidth <= 768) {
+                    toggleSidebar(false);
+                }
             });
         });
 
@@ -182,6 +190,42 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`DEBUG: Updated nav buttons. Prev disabled: ${prevButton.disabled}, Next disabled: ${nextButton.disabled}`);
     }
 
+    // --- Mobile Sidebar Toggle Logic ---
+    function setupMobileToggle() {
+        if (!menuToggle || !sidebar || !overlay) {
+            console.error("DEBUG: Mobile toggle elements (button, sidebar, overlay) not found!");
+            return;
+        }
+        console.log("DEBUG: Setting up mobile toggle...");
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering overlay click
+            toggleSidebar(); // Toggle without argument means switch state
+        });
+
+        overlay.addEventListener('click', () => {
+            toggleSidebar(false); // Close sidebar when overlay is clicked
+        });
+        console.log("DEBUG: Mobile toggle setup complete.");
+    }
+
+    function toggleSidebar(forceState) {
+        // forceState = true to open, false to close, undefined to toggle
+        if (!sidebar || !overlay) return; // Ensure elements exist
+
+        const currentState = sidebar.classList.contains('active');
+        const newState = (forceState === undefined) ? !currentState : forceState;
+
+        if (newState) {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+            console.log("DEBUG: Sidebar opened.");
+        } else {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            console.log("DEBUG: Sidebar closed.");
+        }
+    }
 
      // --- Hint System Logic ---
     let hideHintPopupHandler; // Declare variable to hold the handler reference
@@ -562,8 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (userStatusDiv) userStatusDiv.style.display = 'none';
             toggleAuthForms(true); // Default to showing login form when logged out
         }
-         if (authMessage) authMessage.textContent = ''; // Clear message on UI update
-         updateVivaButtonState(); // Viva button might depend on login status
+-         updateVivaButtonState(); // Viva button might depend on login status
          // Add logic here later to enable/disable save/load based on login status if needed
     }
 
