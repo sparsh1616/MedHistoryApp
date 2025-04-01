@@ -606,8 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (userStatusDiv) userStatusDiv.style.display = 'none';
             toggleAuthForms(true); // Default to showing login form when logged out
         }
-        // Note: updateVivaButtonState() is called within initApp and save/load functions
-         if (authMessage) authMessage.textContent = ''; // Clear message on UI update
+-         updateVivaButtonState(); // Viva button might depend on login status
          // Add logic here later to enable/disable save/load based on login status if needed
     }
 
@@ -1028,7 +1027,6 @@ Instructions:
 - You can use the provided case data below for context if the student's question relates to it, but primarily focus on answering their specific questions.
 - Explain concepts clearly. If asked about a procedure or test, describe how it's done and its significance.
 - If asked about management, outline the principles and common options (conservative/surgical).
-- **If a visual aid would be helpful (e.g., for an examination technique or anatomy), suggest searching for an image by including the tag \`[SEARCH_IMAGE: descriptive search query]\` at the end of your relevant text explanation.** For example: "To perform the Lachman test... [SEARCH_IMAGE: Lachman test diagram]". Only suggest images directly relevant to the explanation.
 - Keep answers focused and avoid overly complex details unless specifically asked.
 - Maintain a helpful, encouraging tutor tone.
 - Start by inviting the student to ask their first question.
@@ -1052,10 +1050,8 @@ Wait for the student's first question.`;
         showNotification(`AI ${selectedMode === 'exam' ? 'Exam' : 'Learning'} Session started!`, 'info');
         // startVivaTimer(VIVA_INITIAL_DURATION); // Start the timer - Keep commented out for now
 
-        // Get the first AI question (or wait in learning mode)
-        if (selectedMode === 'exam') {
-            getAIResponse(); // Call the new async function
-        }
+        // Get the first AI question
+        getAIResponse(); // Call the new async function
     }
 
     function endViva() {
@@ -1110,91 +1106,6 @@ Wait for the student's first question.`;
          }
          chatMessages.appendChild(messageDiv);
          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
-
-         // Check for image search tag *after* adding the main text message
-         const imageSearchMatch = text.match(/\[SEARCH_IMAGE:\s*(.*?)\]/);
-         if (sender === 'ai' && imageSearchMatch && imageSearchMatch[1]) {
-             const query = imageSearchMatch[1].trim();
-             // Remove the tag from the displayed text (find the messageDiv just added and update its content)
-             messageDiv.innerHTML = messageDiv.innerHTML.replace(/\[SEARCH_IMAGE:.*?\]/, '').trim();
-             // Trigger the image search
-             handleImageSearch(query); // Call the async function
-         }
-     }
-
-     // --- MCP Image Search Handling ---
-     async function handleImageSearch(query) {
-         if (!query) return;
-         console.log(`[MCP] Triggering image search for: "${query}"`);
-         addMessageToChat(`Searching for images related to "${query}"...`, "system", true); // Use system message for status
-
-         try {
-             // Assuming 'MedicalImageSearcher' is the server name configured in settings
-             // And 'find_images' is the tool name
-             // The 'use_mcp_tool' function needs to be available globally or imported if using modules
-             // For now, assuming a global function `window.use_mcp_tool` exists (this might need adjustment based on actual MCP client integration)
-
-             // Check if the global MCP function exists
-             if (typeof window.mcp?.useTool !== 'function') {
-                 console.error("MCP client function 'window.mcp.useTool' is not available.");
-                 throw new Error("MCP client integration is not available.");
-             }
-
-             const result = await window.mcp.useTool( // Use the correct function name if different
-                 "MedicalImageSearcher", // Server name
-                 "find_images", // Tool name
-                 { query: query } // Arguments object
-             );
-
-             // Remove "Searching..." message
-             const searchingMsg = chatMessages.querySelector('.message.system.indicator-message'); // Find the specific searching message
-             if (searchingMsg && searchingMsg.textContent.includes('Searching for images')) {
-                 searchingMsg.remove();
-             }
-
-             console.log("[MCP] Image search result:", result);
-
-             // Check for errors and valid content structure from MCP result
-             if (result.isError || !result.content || result.content.length === 0 || result.content[0].type !== 'application/json') {
-                 const errorText = result.isError ? (result.content && result.content[0]?.text) : 'No valid image data received.';
-                 throw new Error(errorText || 'Unknown error during image search.');
-             }
-
-             // Parse the JSON string containing image URLs
-             const imageUrls = JSON.parse(result.content[0].text);
-
-             if (Array.isArray(imageUrls) && imageUrls.length > 0) {
-                 addMessageToChat(`Found images for "${query}":`, "system"); // Indicate results are being shown
-                 const imageContainer = document.createElement('div');
-                 imageContainer.className = 'image-results-container'; // Add class for styling if needed
-                 imageUrls.forEach(url => {
-                     const img = document.createElement('img');
-                     img.src = url;
-                     img.alt = `Search result for ${query}`;
-                     img.style.maxWidth = '150px'; // Basic styling
-                     img.style.maxHeight = '150px';
-                     img.style.margin = '5px';
-                     img.style.border = '1px solid #ccc';
-                     img.style.cursor = 'pointer'; // Indicate it's clickable
-                     img.onerror = () => { img.style.display = 'none'; }; // Hide broken images
-                     img.onclick = () => window.open(url, '_blank'); // Open full image in new tab
-                     imageContainer.appendChild(img);
-                 });
-                 chatMessages.appendChild(imageContainer);
-                 chatMessages.scrollTop = chatMessages.scrollHeight;
-             } else {
-                 addMessageToChat(`No images found for "${query}".`, "system");
-             }
-
-         } catch (error) {
-             console.error("[MCP] Error during image search:", error);
-              // Remove "Searching..." message even on error
-             const searchingMsg = chatMessages.querySelector('.message.system.indicator-message');
-             if (searchingMsg && searchingMsg.textContent.includes('Searching for images')) {
-                 searchingMsg.remove();
-             }
-             addMessageToChat(`Error searching for images: ${error.message || 'Unknown error'}`, "system", true);
-         }
      }
  
      // --- Timer Logic (Placeholder - Keep commented out for now) ---
@@ -1253,7 +1164,7 @@ Wait for the student's first question.`;
                  const aiMessage = data.response;
 
                  console.log("DEBUG: Received AI response:", aiMessage.substring(0, 100) + '...');
-                 addMessageToChat(aiMessage, "ai"); // This will now also check for [SEARCH_IMAGE:]
+                 addMessageToChat(aiMessage, "ai");
                  aiConversationHistory.push({ role: 'assistant', content: aiMessage });
             }
 
