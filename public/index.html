@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrthoHistory - Orthopedic History & Exam Guide</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="manifest" href="/manifest.json"> <!-- Add Manifest Link -->
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+                <div>
+                    <h1><i class="fas fa-bone"></i> OrthoHistory</h1>
+                    <p>A guide for Orthopedic history taking and examination</p>
+                </div>
+                <div id="login-status" style="margin-left: auto; padding: 0 20px"></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="sidebar">
+                <!-- Case Sections -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-header">
+                        <i class="fas fa-file-medical-alt"></i> Case Sections
+                    </h3>
+                    <nav class="history-nav">
+                        <ul>
+                            <li data-section="patient-info" class="active"><i class="fas fa-user"></i> Patient Demographics</li>
+
+                            <li data-section="chief-complaint"><i class="fas fa-exclamation-circle"></i> Chief Complaint</li>
+                            <li data-section="present-illness"><i class="fas fa-file-medical-alt"></i> History of Present Illness</li>
+                            <li data-section="past-medical"><i class="fas fa-notes-medical"></i> Past Medical History</li>
+                            <li data-section="past-ortho"><i class="fas fa-history"></i> Past Orthopedic History</li>
+                            <li data-section="medications"><i class="fas fa-pills"></i> Medications</li>
+                            <li data-section="allergies"><i class="fas fa-allergies"></i> Allergies</li>
+                            <li data-section="family-history"><i class="fas fa-users"></i> Family History</li>
+                            <li data-section="social-history"><i class="fas fa-user-friends"></i> Social History</li>
+                            <li data-section="review-systems"><i class="fas fa-clipboard-list"></i> Review of Systems</li>
+                            <li data-section="examination"><i class="fas fa-stethoscope"></i> Examination</li>
+                            <li data-section="summary-diagnosis"><i class="fas fa-lightbulb"></i> Summary & Diagnosis</li>
+                        </ul>
+                    </nav>
+                </div>
+
+
+                <!-- Authentication Section -->
+                <div class="sidebar-section auth-section">
+                    <h3 class="sidebar-header">
+                        <i class="fas fa-user-circle"></i> Account
+                    </h3>
+                    <div id="auth-forms">
+                        <form id="login-form" class="auth-form">
+                            <h4>Login</h4>
+                            <div class="form-group">
+                                <label for="login-username">Username:</label>
+                                <input type="text" id="login-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password:</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn primary">Login</button>
+                            <p class="auth-toggle">Need an account? <a href="#" id="show-register">Register</a></p>
+                        </form>
+                        <form id="register-form" class="auth-form" style="display: none;">
+                            <h4>Register</h4>
+                             <div class="form-group">
+                                <label for="register-username">Username:</label>
+                                <input type="text" id="register-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password:</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <button type="submit" class="btn primary">Register</button>
+                            <p class="auth-toggle">Already have an account? <a href="#" id="show-login">Login</a></p>
+                        </form>
+                    </div>
+                     <div id="user-status" style="display: none;">
+                        <p>Logged in as: <strong id="logged-in-username"></strong></p>
+                        <button id="logout-button" class="btn secondary">Logout</button>
+                    </div>
+                    <p id="auth-message" class="auth-message"></p> <!-- For login/register feedback -->
+                </div>
+                <!-- End Authentication Section -->
+
+
+
+                <div class="actions">
+                    <button id="save-history" class="btn primary"><i class="fas fa-save"></i> Save Case</button>
+                    <button id="export-pdf" class="btn secondary"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                    <button id="new-history" class="btn secondary"><i class="fas fa-plus"></i> New Case</button>
+                    <button id="start-ai-viva" class="btn ai-btn" disabled><i class="fas fa-robot"></i> Start AI Viva</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Patient Demographics -->
+                <div id="patient-info" class="history-section">
+                    <h2>Patient Demographics</h2>
+                    <div class="form-group">
+                        <label for="patient-name">Patient Name:</label>
+                        <input type="text" id="patient-name" placeholder="Enter patient name">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-age">Age:</label>
+                        <input type="number" id="patient-age" placeholder="Years">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-gender">Gender:</label>
+                        <select id="patient-gender">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-occupation">Occupation:</label>
+                        <input type="text" id="patient-occupation" placeholder="Enter occupation">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-handedness">Handedness:</label>
+                        <select id="patient-handedness">
+                            <option value="">Select</option>
+                            <option value="right">Right</option>
+                            <option value="left">Left</option>
+                            <option value="ambidextrous">Ambidextrous</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-address">Address:</label>
+                        <textarea id="patient-address" placeholder="Enter patient address" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Chief Complaint -->
+                <div id="chief-complaint" class="history-section active">
+                    <h2>Chief Complaint (CC) <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_heading_hint"></i></h2>
+                    <div class="section-info">
+                        <p>The patient's main problem in their own words, including duration.</p>
+                        <p><i>Example: "Left knee pain and swelling for 2 weeks after twisting it."</i></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="cc-notes">Chief Complaint: <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_input_hint"></i></label>
+                        <textarea id="cc-notes" placeholder="Enter the patient's chief complaint..."></textarea>
+                    </div>
+                </div>
+
+                <!-- History of Present Illness -->
+                <div id="present-illness" class="history-section">
+                    <h2>History of Present Illness (HPI) <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_heading_hint"></i></h2>
+                    <div class="form-group">
+                        <label for="hpi-onset">Onset:</label>
+                        <textarea id="hpi-onset" placeholder="When did it start? Sudden or gradual?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-moi">Mechanism of Injury (MOI) / Onset Description: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_moi_hint"></i></label>
+                        <textarea id="hpi-moi" placeholder="Detailed description of trauma (forces, position) OR how non-traumatic symptoms began..."></textarea>
+                    </div>
+                     <fieldset class="form-group trauma-assessment">
+                        <legend>Associated Trauma Assessment (if applicable) <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_trauma_hint"></i></legend>
+                         <p class="info-text">Document pertinent negatives for trauma cases.</p>
+                        <div class="checkbox-group">
+                            <label>Head Injury / LOC:</label>
+                            <input type="radio" name="head_injury" value="yes" id="head_injury_yes"><label for="head_injury_yes">Yes</label>
+                            <input type="radio" name="head_injury" value="no" id="head_injury_no"><label for="head_injury_no">No</label>
+                            <input type="text" id="head_injury_details" placeholder="Details (LOC duration, headache, vomiting)..." style="margin-left: 10px; flex-grow: 1;">
+                        </div>
+                         <div class="checkbox-group">
+                            <label>Neck Pain/Injury:</label>
+                            <input type="radio" name="neck_injury" value="yes" id="neck_injury_yes"><label for="neck_injury_yes">Yes</label>
+                            <input type="radio" name="neck_injury" value="no" id="neck_injury_no"><label for="neck_injury_no">No</label>
+                        </div>
+                         <div class="checkbox-group">
+                            <label>Chest Pain/Difficulty Breathing:</label>
+                            <input type="radio" name="chest_injury" value="yes" id="chest_injury_yes"><label for="chest_injury_yes">Yes</label>
+                            <input type="radio" name="chest_injury" value="no" id="chest_injury_no"><label for="chest_injury_no">No</label>
+                        </div>
+                         <div class="checkbox-group">
+                            <label>Abdominal Pain:</label>
+                            <input type="radio" name="abd_injury" value="yes" id="abd_injury_yes"><label for="abd_injury_yes">Yes</label>
+                            <input type="radio" name="abd_injury" value="no" id="abd_injury_no"><label for="abd_injury_no">No</label>
+                        </div>
+                         <div class="form-group">
+                             <label for="hpi-other-injuries">Other Injuries Reported/Suspected:</label>
+                             <textarea id="hpi-other-injuries" placeholder="Describe any other injuries..."></textarea>
+                         </div>
+                    </fieldset>
+                    <div class="form-group">
+                        <label for="hpi-location">Location & Radiation:</label>
+                        <textarea id="hpi-location" placeholder="Precise location? Does it radiate?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-duration">Duration & Frequency:</label>
+                        <textarea id="hpi-duration" placeholder="How long present? Constant or intermittent?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-character">Character: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_character_hint"></i></label>
+                        <textarea id="hpi-character" placeholder="Describe the pain/symptom (sharp, dull, aching, burning, numbness, weakness, instability, locking, clicking...)..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-aggravating">Aggravating Factors:</label>
+                        <textarea id="hpi-aggravating" placeholder="What makes it worse? (Activities, positions...)"></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="hpi-alleviating">Alleviating Factors:</label>
+                        <textarea id="hpi-alleviating" placeholder="What makes it better? (Rest, medication, ice/heat...)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-related-symptoms">Related Symptoms (Local):</label>
+                        <textarea id="hpi-related-symptoms" placeholder="Swelling, bruising, redness, warmth, deformity, grinding, popping?"></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="hpi-pertinent-negatives">Pertinent Negatives (Local): <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_pertinent_negatives_hint"></i></label>
+                        <textarea id="hpi-pertinent-negatives" placeholder="Absence of numbness, weakness, locking, instability, fever, chills etc.?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-timing">Timing:</label>
+                        <textarea id="hpi-timing" placeholder="Pattern? Worse in morning/night? Related to activity?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-severity">Severity:</label>
+                        <textarea id="hpi-severity" placeholder="Pain scale (0-10) at rest and with activity?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="hpi-functional-limitations">Functional Limitations: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_functional_limitations_hint"></i></label>
+                        <textarea id="hpi-functional-limitations" placeholder="Impact on ADLs (walking, stairs, dressing), Work, Hobbies/Sports?"></textarea>
+                    </div>
+                </div>
+
+                <!-- Past Medical History -->
+                <div id="past-medical" class="history-section">
+                    <h2>Past Medical History (PMH) <i class="fas fa-lightbulb hint-icon" data-hint-key="pmh_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Include significant past diseases, surgeries, hospitalizations, emphasizing conditions relevant to orthopedics (Diabetes, Osteoporosis, RA, Gout, DVT/PE, Cancer).</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="pmh-notes">PMH Details:</label>
+                        <textarea id="pmh-notes" placeholder="List relevant past medical history..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Past Orthopedic History -->
+                 <div id="past-ortho" class="history-section">
+                    <h2>Past Orthopedic History <i class="fas fa-lightbulb hint-icon" data-hint-key="past_ortho_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Previous injuries, fractures, dislocations, surgeries, or treatments (physiotherapy, injections) involving the affected area, contralateral limb, or spine? History of arthritis? Note absence of previous issues if confirmed.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="past-ortho-notes">Past Orthopedic History Details:</label>
+                        <textarea id="past-ortho-notes" placeholder="List relevant past orthopedic history..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Medications -->
+                <div id="medications" class="history-section">
+                    <h2>Medications <i class="fas fa-lightbulb hint-icon" data-hint-key="meds_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Document all current medications (prescription, OTC, supplements). Note pain meds, NSAIDs, steroids, anticoagulants, bisphosphonates, DMARDs.</p>
+                    </div>
+                    <div class="medication-list">
+                        <button id="add-medication" class="btn secondary"><i class="fas fa-plus"></i> Add Medication</button>
+                        <div class="medication-entries">
+                            <!-- Medication entries will be added here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Allergies -->
+                <div id="allergies" class="history-section">
+                    <h2>Allergies <i class="fas fa-lightbulb hint-icon" data-hint-key="allergies_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Document all allergies (medications, foods, environmental) and the type of reaction.</p>
+                    </div>
+                     <div class="allergy-list">
+                        <button id="add-allergy" class="btn secondary"><i class="fas fa-plus"></i> Add Allergy</button>
+                        <div class="allergy-entries">
+                           <!-- Allergy entries will be added here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Family History -->
+                <div id="family-history" class="history-section">
+                    <h2>Family History (FH) <i class="fas fa-lightbulb hint-icon" data-hint-key="fh_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Focus on conditions like Osteoarthritis, Rheumatoid Arthritis, Osteoporosis, bleeding disorders, hereditary musculoskeletal conditions in first-degree relatives.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="fh-notes">Family History Details:</label>
+                        <textarea id="fh-notes" placeholder="Document relevant family medical history..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Social History -->
+                <div id="social-history" class="history-section">
+                    <h2>Social History (SH) <i class="fas fa-lightbulb hint-icon" data-hint-key="sh_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Include Occupation (physical demands), Living Situation (stairs?), Activity Level, Handedness, Tobacco/Alcohol/Drug use.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="sh-notes">Social History Details:</label>
+                        <textarea id="sh-notes" placeholder="Document relevant social history..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Review of Systems -->
+                <div id="review-systems" class="history-section">
+                    <h2>Review of Systems (ROS) <i class="fas fa-lightbulb hint-icon" data-hint-key="ros_heading_hint"></i></h2>
+                     <div class="section-info">
+                        <p>Systematic inventory. Document positive and relevant negative findings (e.g., No fever/chills/weight loss, No other joint pain, No bowel/bladder changes).</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="ros-notes">ROS Details:</label>
+                        <textarea id="ros-notes" placeholder="Document systematic review of systems..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Examination -->
+                <div id="examination" class="history-section">
+                    <h2>Examination <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_heading_hint"></i></h2>
+                     <div class="form-group">
+                        <label for="exam-general">General Inspection: <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_general_hint"></i></label>
+                        <textarea id="exam-general" placeholder="Patient's condition, posture, gait, aids, initial observation..."></textarea>
+                    </div>
+                    <fieldset class="form-group">
+                        <legend>Local Examination - Affected Area</legend>
+                         <div class="form-group">
+                            <label for="exam-look">Look (Inspection): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_look_hint"></i></label>
+                            <textarea id="exam-look" placeholder="Attitude, Skin (scars, swelling, redness), Shape/Contour (deformity, wasting), Comparison with other side..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-feel">Feel (Palpation): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_feel_hint"></i></label>
+                            <textarea id="exam-feel" placeholder="Temperature, Tenderness (localize), Swelling (consistency, effusion), Crepitus, Specific structures..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-move">Move (Range of Motion): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_move_hint"></i></label>
+                            <textarea id="exam-move" placeholder="Active ROM (degrees, pain), Passive ROM (degrees, end-feel, pain), Comparison with other side..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-measurements">Measurements:</label>
+                            <textarea id="exam-measurements" placeholder="Limb length (True/Apparent), Circumference..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-special-tests">Special Tests: <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_special_tests_hint"></i></label>
+                            <textarea id="exam-special-tests" placeholder="List relevant tests and findings (e.g., Lachman: Positive, McMurray: Negative)..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-neuro">Neurological Examination (Distal): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_neuro_hint"></i></label>
+                            <textarea id="exam-neuro" placeholder="Motor (MRC grade), Sensory (dermatomes), Reflexes..."></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="exam-vascular">Vascular Examination (Distal): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_vascular_hint"></i></label>
+                            <textarea id="exam-vascular" placeholder="Pulses, Capillary Refill, Color, Temperature..."></textarea>
+                        </div>
+                    </fieldset>
+                     <div class="form-group">
+                        <label for="exam-related">Examination of Related Areas:</label>
+                        <textarea id="exam-related" placeholder="Joint above and below, Spine (if relevant)..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Summary & Diagnosis -->
+                <div id="summary-diagnosis" class="history-section">
+                    <h2>Summary & Diagnosis <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_diagnosis_heading_hint"></i></h2>
+                    <div class="form-group">
+                        <label for="summary-clinical">Clinical Summary: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_clinical_hint"></i></label>
+                        <textarea id="summary-clinical" placeholder="Concise paragraph summarizing key positive and negative findings from history and examination..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="summary-ddx-history">Differential Diagnosis (Based on History Alone): <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_ddx_history_hint"></i></label>
+                        <textarea id="summary-ddx-history" placeholder="Numbered list of possibilities based only on history..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="summary-ddx-exam">Differential Diagnosis (Based on History & Examination): <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_ddx_exam_hint"></i></label>
+                        <textarea id="summary-ddx-exam" placeholder="Refined numbered list after incorporating examination findings..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="summary-provisional">Provisional Diagnosis: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_provisional_hint"></i></label>
+                        <textarea id="summary-provisional" placeholder="Single most likely diagnosis..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="summary-plan">Initial Management / Investigation Plan: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_plan_hint"></i></label>
+                        <textarea id="summary-plan" placeholder="Outline initial investigations or basic management steps..."></textarea>
+                    </div>
+                </div>
+
+                 <!-- AI Viva Chat Area -->
+                <div id="ai-viva-chat" class="history-section chat-section">
+                    <div class="viva-header">
+                        <h2>AI Viva Simulation</h2>
+                        <div id="viva-timer-display" class="timer-display">Time: 07:00</div>
+                    </div>
+                    <div class="chat-window">
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- AI and Student messages will appear here -->
+                             <div class="message ai">Welcome to the AI Viva! I will ask questions based on your case entry.</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <textarea id="chat-input" placeholder="Type your response here..." rows="3"></textarea>
+                            <button id="send-chat-message" class="btn primary"><i class="fas fa-paper-plane"></i> Send</button>
+                        </div>
+                        <div id="viva-controls">
+                             <button id="end-ai-viva" class="btn secondary"><i class="fas fa-stop-circle"></i> End Viva</button>
+                             <!-- Prompt for continuing viva -->
+                             <div id="viva-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
+                                 <p>Time's up! Would you like to continue for 5 more minutes?</p>
+                                 <button id="viva-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
+                                 <button id="viva-force-end-btn" class="btn secondary small-btn">End Now</button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- End content-area -->
+        </main>
+
+        <footer>
+            <div class="navigation-buttons">
+                <button id="prev-section" class="btn nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+                <button id="next-section" class="btn nav-btn">Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+            <p>OrthoHistory App - Designed for Medical Students</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
