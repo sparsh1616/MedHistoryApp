@@ -66,6 +66,15 @@ async function initializeDatabase() {
 }
 
 // --- Middleware ---
+// Explicitly set Content-Type for JS and CSS files
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) {
+    res.type('application/javascript');
+  } else if (req.path.endsWith('.css')) {
+    res.type('text/css');
+  }
+  next();
+});
 // Serve static files from 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 // Parse JSON request bodies
