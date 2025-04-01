@@ -604,6 +604,36 @@ footer p {
     cursor: not-allowed;
 }
 
+/* Viva Mode Selection Styles */
+.viva-mode-selection {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #e9ecef;
+    border-radius: var(--border-radius);
+}
+
+.viva-mode-selection h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.9em;
+    color: var(--dark-color);
+}
+
+.viva-mode-selection .radio-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.viva-mode-selection input[type="radio"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.viva-mode-selection label {
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
 
 /* Responsive Styles */
 @media (max-width: 992px) {

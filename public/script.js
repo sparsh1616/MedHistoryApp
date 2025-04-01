@@ -951,11 +951,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // --- AI Viva Simulation Logic (Re-added with corrections) ---
+    // --- AI Viva Simulation Logic (Updated for Modes) ---
     // let aiConversationHistory = []; // Already declared at top
 
     function updateVivaButtonState() {
         const startButton = document.getElementById('start-ai-viva');
+        const vivaModeSelection = document.querySelector('.viva-mode-selection');
         const endButton = document.getElementById('end-ai-viva');
         const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-chat-message');
@@ -964,6 +965,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Enable Start button only if there's some data saved/entered
         const hasData = !!localStorage.getItem('orthoHistoryData') || document.getElementById('cc-notes')?.value.trim() !== '';
         if (startButton) startButton.disabled = vivaInProgress || !hasData;
+
+        // Hide mode selection during viva
+        if (vivaModeSelection) vivaModeSelection.style.display = vivaInProgress ? 'none' : 'block';
 
         // Control visibility/state of chat elements
         if (chatSection) chatSection.style.display = vivaInProgress ? 'block' : 'none';
@@ -976,42 +980,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function startViva() {
         if (vivaInProgress) return;
-        console.log("DEBUG: Starting AI Viva...");
+
+        // Determine selected mode
+        const selectedMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam'; // Default to exam mode
+        console.log(`DEBUG: Starting AI Session in ${selectedMode} mode...`);
+
         vivaInProgress = true;
         aiConversationHistory = []; // Reset history
 
         // Prepare initial context for AI
         const caseSummary = collectFormData(); // Get current data
-        // --- Combined Refined Initial Prompt ---
-        const initialPrompt = `You are an AI examiner simulating a challenging but fair orthopedic viva for a medical student.
+        let initialPrompt = '';
+        let welcomeMessage = '';
+
+        if (selectedMode === 'exam') {
+            welcomeMessage = 'Welcome to the AI Viva Exam! I will ask questions based on your case entry. Preparing first question...';
+            // --- Exam Mode Prompt ---
+            initialPrompt = `You are an AI examiner simulating a challenging but fair final MBBS Orthopedics viva for a medical student.
 Your goal is to assess their understanding and clinical reasoning based on the case history provided below.
 
 Instructions:
-- Start with a relatively straightforward, open-ended question about the Chief Complaint or HPI to get the discussion going.
-- Ask relevant follow-up questions that probe deeper into their knowledge. **Aim for a mix of question types:** recall (e.g., "What are..."), interpretation (e.g., "What does X suggest?"), application (e.g., "How would you manage Y?"), and analysis (e.g., "Why choose A over B?").
-- **Crucially, if the case suggests a specific condition (like a fracture), ensure you ask about potential complications associated with that condition.**
-- **If the provided case data is unclear or missing information needed for a question, acknowledge this and ask the student how they would obtain that information or proceed despite its absence.**
-- If the student gives a vague or incorrect answer, prompt them for clarification or guide them towards the correct reasoning without giving the answer away directly.
-- Maintain a professional and slightly formal tone.
-- Keep your responses concise and focused on the examination.
-- **Conclude the viva session by asking the student if they have any final questions.**
+- Base your questions on the case data provided below.
+- Cover the following key areas: History Taking, Physical Examination, Provisional & Differential Diagnosis, Investigations, Management (Conservative/Surgical), and Complications (Early/Late).
+- Ask a variety of question types: recall, interpretation, application, analysis.
+- If the case suggests specific conditions (fractures, nerve issues), ask about relevant classifications, special tests, and complications.
+- If case data is missing for a question, ask the student how they would find that information.
+- If answers are vague/incorrect, prompt for clarification or guide reasoning without giving the answer.
+- Maintain a professional, challenging but fair examiner tone.
+- Keep responses concise.
+- Conclude by asking the student if they have any final questions.
 
-Here is the case data entered by the student:
 --- Case Data ---
 ${JSON.stringify(caseSummary, null, 2)}
 --- End Case Data ---
 
 Begin the examination now with your first question.`;
-        // --- End Combined Refined Prompt ---
+            // --- End Exam Mode Prompt ---
+        } else { // Learning Mode
+             welcomeMessage = 'Welcome to the AI Learning Session! Ask me anything about orthopedic history taking, examination, investigations, or management based on your case or general principles (undergraduate level).';
+             // --- Learning Mode Prompt ---
+             initialPrompt = `You are an AI tutor assisting a final MBBS medical student learning Orthopedics.
+Your goal is to provide clear, concise explanations and guidance at an undergraduate level.
+Instructions:
+- The student will ask you questions related to orthopedic history, examination, investigations, or management.
+- Base your answers on established orthopedic principles and knowledge suitable for a final year medical student.
+- You can use the provided case data below for context if the student's question relates to it, but primarily focus on answering their specific questions.
+- Explain concepts clearly. If asked about a procedure or test, describe how it's done and its significance.
+- If asked about management, outline the principles and common options (conservative/surgical).
+- Keep answers focused and avoid overly complex details unless specifically asked.
+- Maintain a helpful, encouraging tutor tone.
+- Start by inviting the student to ask their first question.
+
+--- Case Data (for context if needed) ---
+${JSON.stringify(caseSummary, null, 2)}
+--- End Case Data ---
+
+Wait for the student's first question.`;
+             // --- End Learning Mode Prompt ---
+        }
+
 
         aiConversationHistory.push({ role: 'system', content: initialPrompt });
 
-        // Clear chat window except for welcome message
+        // Clear chat window and show appropriate welcome message
         const chatMessages = document.getElementById('chat-messages');
-        chatMessages.innerHTML = '<div class="message ai">Welcome to the AI Viva! I will ask questions based on your case entry. Preparing first question...</div>';
+        chatMessages.innerHTML = `<div class="message ai">${welcomeMessage}</div>`; // Use mode-specific welcome
 
         updateVivaButtonState();
-        showNotification('AI Viva started!', 'info');
+        showNotification(`AI ${selectedMode === 'exam' ? 'Exam' : 'Learning'} Session started!`, 'info');
         // startVivaTimer(VIVA_INITIAL_DURATION); // Start the timer - Keep commented out for now
 
         // Get the first AI question
