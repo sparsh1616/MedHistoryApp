@@ -33,10 +33,14 @@
                     </h3>
                     <nav class="history-nav">
                         <ul>
-                            <li data-section="patient-info" class="active"><i class="fas fa-user"></i> Patient Demographics</li>
+                            <!-- Group 1: Demographics -->
+                            <li class="nav-subheading">Patient Details</li>
+                            <li data-section="patient-info" class="active"><i class="fas fa-user"></i> Demographics</li>
 
+                            <!-- Group 2: History -->
+                            <li class="nav-subheading">History</li>
                             <li data-section="chief-complaint"><i class="fas fa-exclamation-circle"></i> Chief Complaint</li>
-                            <li data-section="present-illness"><i class="fas fa-file-medical-alt"></i> History of Present Illness</li>
+                            <li data-section="present-illness"><i class="fas fa-file-medical-alt"></i> Present Illness (HPI)</li>
                             <li data-section="past-medical"><i class="fas fa-notes-medical"></i> Past Medical History</li>
                             <li data-section="past-ortho"><i class="fas fa-history"></i> Past Orthopedic History</li>
                             <li data-section="medications"><i class="fas fa-pills"></i> Medications</li>
@@ -44,7 +48,13 @@
                             <li data-section="family-history"><i class="fas fa-users"></i> Family History</li>
                             <li data-section="social-history"><i class="fas fa-user-friends"></i> Social History</li>
                             <li data-section="review-systems"><i class="fas fa-clipboard-list"></i> Review of Systems</li>
-                            <li data-section="examination"><i class="fas fa-stethoscope"></i> Examination</li>
+
+                            <!-- Group 3: Examination -->
+                            <li class="nav-subheading">Examination</li>
+                            <li data-section="examination"><i class="fas fa-stethoscope"></i> Examination Details</li>
+
+                            <!-- Group 4: Summary -->
+                            <li class="nav-subheading">Summary & Plan</li>
                             <li data-section="summary-diagnosis"><i class="fas fa-lightbulb"></i> Summary & Diagnosis</li>
                         </ul>
                     </nav>
@@ -161,12 +171,12 @@
                     <h2>Chief Complaint (CC) <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_heading_hint"></i></h2>
                     <div class="section-info">
                         <p>The patient's main problem in their own words, including duration.</p>
-                        <p><i>Example: "Left knee pain and swelling for 2 weeks after twisting it."</i></p>
+                        <p><i>Example: "Left knee pain and swelling for 2 weeks after twisting it."</i></p> 
                     </div>
                     <div class="form-group">
-                        <label for="cc-notes">Chief Complaint: <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_input_hint"></i></label>
+                        <label for="cc-notes">Chief Complaint: <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_input_hint"></i></label> 
                         <textarea id="cc-notes" placeholder="Enter the patient's chief complaint..."></textarea>
-                    </div>
+                    </div> 
                 </div>
 
                 <!-- History of Present Illness -->

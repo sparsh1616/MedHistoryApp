@@ -140,9 +140,30 @@ main {
 
 .history-nav ul {
     list-style: none;
+    padding-left: 0; /* Remove default padding */
 }
 
-.history-nav li {
+/* Style for subheadings */
+.history-nav li.nav-subheading {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: transparent; /* No background */
+    cursor: default; /* Not clickable */
+    border-bottom: 1px solid var(--border-color); /* Optional separator */
+}
+.history-nav li.nav-subheading:first-of-type {
+    margin-top: 0; /* No top margin for the very first subheading */
+}
+.history-nav li.nav-subheading i { /* Hide icon placeholder if any */
+    display: none;
+}
+
+
+/* Style for actual navigation items */
+.history-nav li:not(.nav-subheading) {
     padding: 0.75rem 1rem;
     margin-bottom: 0.5rem;
     border-radius: var(--border-radius);
@@ -150,9 +171,11 @@ main {
     transition: background-color 0.3s;
     display: flex;
     align-items: center;
+    /* Indent items under subheadings slightly */
+    padding-left: 1.5rem;
 }
 
-.history-nav li i {
+.history-nav li:not(.nav-subheading) i {
     margin-right: 0.75rem;
     width: 20px;
     text-align: center;
@@ -162,7 +185,7 @@ main {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.history-nav li.active {
+.history-nav li:not(.nav-subheading).active {
     background-color: var(--primary-color);
     color: white;
 }
