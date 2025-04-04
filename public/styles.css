@@ -627,6 +627,40 @@ footer p {
     cursor: not-allowed;
 }
 
+/* Saved Cases Styles */
+#saved-cases-section {
+    /* Add styles if needed, e.g., border-top */
+    border-top: 1px solid var(--border-color);
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+.saved-cases-container {
+    max-height: 150px; /* Limit height and make scrollable */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: #fff; /* White background for select */
+}
+#saved-case-select {
+    border: none; /* Remove default select border */
+    outline: none;
+    font-size: 0.9em;
+}
+#saved-case-select option {
+    padding: 5px;
+}
+.no-cases-message, .error-message {
+    font-style: italic;
+    color: #6c757d;
+    padding: 10px;
+    text-align: center;
+}
+.error-message {
+    color: var(--danger-color);
+}
+
+
 /* Viva Mode Selection Styles */
 .viva-mode-selection {
     margin-bottom: 1rem;

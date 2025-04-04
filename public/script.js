@@ -542,6 +542,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const registerForm = event.target;
         const username = document.getElementById('register-username')?.value.trim();
         const password = document.getElementById('register-password')?.value;
+        const email = document.getElementById('register-email')?.value.trim(); // Get email
+        const fullName = document.getElementById('register-full-name')?.value.trim(); // Get full name
+        const studyYear = document.getElementById('register-study-year')?.value.trim(); // Get study year
+        const institute = document.getElementById('register-institute')?.value.trim(); // Get institute
         const authMessage = document.getElementById('auth-message');
         
         // Clear previous messages
@@ -570,10 +574,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Disable form during submission
             registerForm.querySelector('button[type="submit"]').disabled = true;
             
+            // Construct payload with all fields
+            const payload = { 
+                username, 
+                password, 
+                email: email || null, // Send null if empty
+                full_name: fullName || null, 
+                study_year: studyYear || null, 
+                institute: institute || null 
+            };
+
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify(payload) 
             });
 
             const result = await response.json();
@@ -1186,8 +1200,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const sendButton = document.getElementById('send-chat-message');
         const chatSection = document.getElementById('ai-viva-chat');
 
-        // Enable Start button only if there's some data saved/entered
-        const hasData = !!localStorage.getItem('orthoHistoryData') || document.getElementById('cc-notes')?.value.trim() !== '';
+        // Enable Start button only if there's some data entered or loaded
+        const hasData = currentCaseId || document.getElementById('cc-notes')?.value.trim() !== ''; // Check currentCaseId too
         if (startButton) startButton.disabled = vivaInProgress || !hasData;
 
         // Hide mode selection during viva
@@ -1381,16 +1395,17 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
          // Example: Assume AI uses "Key: Value" pairs or Markdown headings.
          const lines = aiResponseText.split('\n');
          const parsedData = {};
-         let currentKey = null;
+         let currentKey = null; // Keep track of multi-line values if needed
 
          // Simple Key: Value parsing (adjust based on observed AI output)
          lines.forEach(line => {
              const parts = line.split(':');
              if (parts.length >= 2) {
-                 const key = parts[0].trim().toLowerCase().replace(/\s+/g, '-'); // Normalize key
+                 // Normalize key: lowercase, replace spaces/symbols with hyphens, remove trailing punctuation
+                 let key = parts[0].trim().toLowerCase().replace(/[\s_]+/g, '-').replace(/[()]/g, ''); 
                  const value = parts.slice(1).join(':').trim();
                  
-                 // Map common variations to form IDs (needs expansion)
+                 // Map common variations to form IDs (needs expansion and refinement)
                  if (key.includes('patient-name')) parsedData['patient-name'] = value;
                  else if (key.includes('age')) parsedData['patient-age'] = value;
                  else if (key.includes('gender')) parsedData['patient-gender'] = value.toLowerCase();
@@ -1399,21 +1414,34 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
                  else if (key.includes('hpi') || key.includes('present-illness')) parsedData['present-illness'] = (parsedData['present-illness'] || '') + value + '\n'; // Append HPI parts
                  else if (key.includes('pmh') || key.includes('past-medical')) parsedData['pmh-notes'] = value;
                  else if (key.includes('past-ortho')) parsedData['past-ortho-notes'] = value;
-                 // ... add more mappings for other fields based on expected AI output format ...
-                 else if (key.includes('examination')) parsedData['examination'] = (parsedData['examination'] || '') + value + '\n';
+                 else if (key.includes('medications')) parsedData['medications'] = [{ name: value, dosage: "", frequency: "" }]; // Basic handling
+                 else if (key.includes('allergies')) parsedData['allergies'] = [{ name: value, reaction: "" }]; // Basic handling
+                 else if (key.includes('family-history')) parsedData['fh-notes'] = value;
+                 else if (key.includes('social-history')) parsedData['sh-notes'] = value;
+                 else if (key.includes('review-of-systems')) parsedData['ros-notes'] = value;
+                 else if (key.includes('general-inspection')) parsedData['exam-general'] = value;
+                 else if (key.includes('look') || key.includes('inspection')) parsedData['exam-look'] = value;
+                 else if (key.includes('feel') || key.includes('palpation')) parsedData['exam-feel'] = value;
+                 else if (key.includes('move') || key.includes('range-of-motion')) parsedData['exam-move'] = value;
+                 else if (key.includes('special-tests')) parsedData['exam-special-tests'] = value;
+                 else if (key.includes('neuro') || key.includes('neurological')) parsedData['exam-neuro'] = value;
+                 else if (key.includes('vascular')) parsedData['exam-vascular'] = value;
                  else if (key.includes('summary')) parsedData['summary-clinical'] = (parsedData['summary-clinical'] || '') + value + '\n';
                  else if (key.includes('plan')) parsedData['summary-plan'] = value;
+                 else if (key.includes('provisional-diagnosis')) parsedData['summary-provisional'] = value;
+                 else if (key.includes('differential-diagnosis')) parsedData['summary-ddx-exam'] = value; // Simple mapping for now
 
              }
          });
 
-         // Check if we parsed *any* data that matches form IDs
-         // Use a simple check for now: if we found a patient name or age, assume it's case data
-         if (parsedData['patient-name'] || parsedData['patient-age']) { 
+         // Check if we parsed *any* data that looks like case data
+         if (Object.keys(parsedData).length > 2) { // Heuristic: if more than a couple of fields were parsed
              console.log("DEBUG: Parsed some dummy case data, attempting to populate form:", parsedData);
              if (confirm("AI generated a case. Load it into the form? This will overwrite current data.")) {
                  populateFormData(parsedData); // Use the parsed data
                  showNotification('AI-generated dummy case loaded into form.', 'success');
+                 currentCaseId = null; // Ensure this is treated as a new, unsaved case
+                 updateVivaButtonState(); // Update button states
                  // Optionally switch back to learning/exam mode or end session?
                  // endViva(); // Or keep session active? Decide UX.
              } else {

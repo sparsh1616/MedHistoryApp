@@ -101,9 +101,25 @@
                                 <label for="register-username">Username:</label>
                                 <input type="text" id="register-username" required>
                             </div>
-                            <div class="form-group">
+                             <div class="form-group">
                                 <label for="register-password">Password:</label>
-                                <input type="password" id="register-password" required>
+                                <input type="password" id="register-password" required minlength="6">
+                            </div>
+                             <div class="form-group">
+                                <label for="register-email">Email:</label>
+                                <input type="email" id="register-email"> <!-- Optional, but validated if entered -->
+                            </div>
+                             <div class="form-group">
+                                <label for="register-full-name">Full Name:</label>
+                                <input type="text" id="register-full-name"> <!-- Optional -->
+                            </div>
+                             <div class="form-group">
+                                <label for="register-study-year">Study Year/Level:</label>
+                                <input type="text" id="register-study-year" placeholder="e.g., MBBS 3rd Year, Intern"> <!-- Optional -->
+                            </div>
+                             <div class="form-group">
+                                <label for="register-institute">Institute:</label>
+                                <input type="text" id="register-institute"> <!-- Optional -->
                             </div>
                             <button type="submit" class="btn primary">Register</button>
                             <p class="auth-toggle">Already have an account? <a href="#" id="show-login">Login</a></p>

@@ -54,10 +54,49 @@ async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL
+        password_hash TEXT NOT NULL,
+        email TEXT UNIQUE, -- Added email (optional, but unique if provided)
+        full_name TEXT, -- Added full name (optional)
+        study_year TEXT, -- Added study year (optional, e.g., 'MBBS 3rd Year', 'Intern')
+        institute TEXT, -- Added institute (optional)
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
-    console.log('Connected to PostgreSQL database (Neon) and users table is ready.');
+    console.log('Users table is ready.');
+
+    // Create cases table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS cases (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        case_title TEXT, 
+        case_data JSONB NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    console.log('Cases table is ready.');
+
+    // Optional: Add a trigger to automatically update updated_at timestamp
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION update_updated_at_column()
+      RETURNS TRIGGER AS $$
+      BEGIN
+         NEW.updated_at = now(); 
+         RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+    `);
+    await pool.query(`
+      DROP TRIGGER IF EXISTS update_cases_updated_at ON cases; -- Drop existing trigger if necessary
+      CREATE TRIGGER update_cases_updated_at
+      BEFORE UPDATE ON cases
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+    `);
+    console.log('Cases updated_at trigger set.');
+
+    console.log('Connected to PostgreSQL database (Neon) and tables are ready.');
   } catch (err) {
     console.error('Error initializing database:', err.stack);
     // Exit if DB connection fails? Or retry? For now, log and exit.
@@ -82,13 +121,20 @@ app.use(express.json());
 
 // --- API Routes ---
 
-// Registration Route (Using pg Pool and async/await)
+// Registration Route (Updated for additional fields)
 app.post('/api/auth/register', async (req, res) => {
-  const { username, password } = req.body;
+  // Extract all fields from request body
+  const { username, password, email, full_name, study_year, institute } = req.body; 
 
+  // Basic validation (only username and password are strictly required by DB schema)
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
   }
+  // Optional: Add validation for email format if provided
+  if (email && !/\S+@\S+\.\S+/.test(email)) {
+     return res.status(400).json({ message: 'Invalid email format.' });
+  }
+  // Removed erroneous closing brace from previous attempt here
 
   try {
     // Check if username already exists using pg pool
@@ -102,17 +148,23 @@ app.post('/api/auth/register', async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Insert new user using pg pool
+    // Insert new user with all provided fields (null for optional fields if not provided)
     const insertUser = await pool.query(
-      'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id', // RETURNING id gets the new user's ID
-      [username, passwordHash]
+      `INSERT INTO users (username, password_hash, email, full_name, study_year, institute) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING id`, 
+      [username, passwordHash, email || null, full_name || null, study_year || null, institute || null]
     );
 
-    console.log(`User registered: ${username} (ID: ${insertUser.rows[0].id})`);
+    console.log(`User registered: ${username} (ID: ${insertUser.rows[0].id}) with additional details.`);
     res.status(201).json({ message: 'User registered successfully.' }); // 201 Created
 
   } catch (error) {
     console.error('Error during registration process:', error.stack); // Log stack trace
+    // Handle potential unique constraint violation for email
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+         return res.status(409).json({ message: 'Email address already in use.' });
+    }
     res.status(500).json({ message: 'Server error during registration.' });
   }
 });
@@ -163,7 +215,148 @@ app.post('/api/auth/login', async (req, res) => { // Make the route handler asyn
   }
 });
 
+
+// --- JWT Authentication Middleware ---
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (token == null) return res.sendStatus(401); // if there isn't any token
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error('JWT Verification Error:', err.message);
+      return res.sendStatus(403); // Forbidden (invalid token)
+    }
+    req.user = user; // Add user payload (e.g., { userId: ..., username: ... }) to request object
+    next(); // pass the execution off to whatever request the client intended
+  });
+};
+
+
+// --- Case Management API Routes ---
+
+// Save a new case
+app.post('/api/cases', authenticateToken, async (req, res) => {
+  const { case_title, case_data } = req.body;
+  const userId = req.user.userId; // Get user ID from authenticated token
+
+  if (!case_data) {
+    return res.status(400).json({ message: 'Case data is required.' });
+  }
+  // Use patient name from case data as title if not provided, or default
+  const title = case_title || case_data['patient-name'] || `Case saved on ${new Date().toLocaleDateString()}`;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO cases (user_id, case_title, case_data) VALUES ($1, $2, $3) RETURNING id, case_title, updated_at',
+      [userId, title, case_data]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error saving case:', error.stack);
+    res.status(500).json({ message: 'Error saving case.' });
+  }
+});
+
+// Get list of cases for the logged-in user
+app.get('/api/cases', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    // Select only necessary fields for the list view
+    const result = await pool.query(
+      'SELECT id, case_title, updated_at FROM cases WHERE user_id = $1 ORDER BY updated_at DESC',
+      [userId]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching cases:', error.stack);
+    res.status(500).json({ message: 'Error fetching cases.' });
+  }
+});
+
+// Get a specific case by ID
+app.get('/api/cases/:id', authenticateToken, async (req, res) => {
+  const caseId = parseInt(req.params.id, 10);
+  const userId = req.user.userId;
+
+  if (isNaN(caseId)) {
+      return res.status(400).json({ message: 'Invalid case ID.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, case_title, case_data, updated_at FROM cases WHERE id = $1 AND user_id = $2',
+      [caseId, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Case not found or access denied.' });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching case:', error.stack);
+    res.status(500).json({ message: 'Error fetching case.' });
+  }
+});
+
+// Update a specific case by ID
+app.put('/api/cases/:id', authenticateToken, async (req, res) => {
+  const caseId = parseInt(req.params.id, 10);
+  const userId = req.user.userId;
+  const { case_title, case_data } = req.body;
+
+   if (isNaN(caseId)) {
+      return res.status(400).json({ message: 'Invalid case ID.' });
+  }
+  if (!case_data) {
+    return res.status(400).json({ message: 'Case data is required.' });
+  }
+  // Use patient name from case data as title if not provided, or default
+  const title = case_title || case_data['patient-name'] || `Case updated on ${new Date().toLocaleDateString()}`;
+
+
+  try {
+    const result = await pool.query(
+      'UPDATE cases SET case_title = $1, case_data = $2 WHERE id = $3 AND user_id = $4 RETURNING id, case_title, updated_at',
+      [title, case_data, caseId, userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Case not found or access denied.' });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating case:', error.stack);
+    res.status(500).json({ message: 'Error updating case.' });
+  }
+});
+
+// Delete a specific case by ID
+app.delete('/api/cases/:id', authenticateToken, async (req, res) => {
+  const caseId = parseInt(req.params.id, 10);
+  const userId = req.user.userId;
+
+   if (isNaN(caseId)) {
+      return res.status(400).json({ message: 'Invalid case ID.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM cases WHERE id = $1 AND user_id = $2 RETURNING id',
+      [caseId, userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Case not found or access denied.' });
+    }
+    res.status(200).json({ message: `Case ${caseId} deleted successfully.` });
+  } catch (error) {
+    console.error('Error deleting case:', error.stack);
+    res.status(500).json({ message: 'Error deleting case.' });
+  }
+});
+
+
 // --- AI Viva Chat Route (Using Gemini with generateContent) ---
+// Note: This route does NOT require authentication in this example, but you might add it
 app.post('/api/viva/chat', async (req, res) => {
   const { conversationHistory } = req.body; // Expecting { role: 'user'/'assistant'/'system', content: '...' }
 
