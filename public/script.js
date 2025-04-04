@@ -25,6 +25,54 @@ document.addEventListener('DOMContentLoaded', function() {
     let medIdCounter = 0;
     let allergyIdCounter = 0;
 
+    // --- Dummy Case Data ---
+    const dummyCaseData = {
+        'patient-name': "Anil Kumar",
+        'patient-age': "25",
+        'patient-gender': "male",
+        'patient-occupation': "Software Engineer",
+        'patient-handedness': "right",
+        'patient-address': "123 Tech Park, Bangalore",
+        'cc-notes': "Pain and swelling in the right lower leg after a fall, unable to bear weight. Happened 2 hours ago.",
+        'hpi-onset': "Sudden onset, 2 hours ago.",
+        'hpi-moi': "Patient reports slipping on a wet floor while walking down stairs. He fell directly onto his right leg with a twisting motion. Heard a 'crack' sound.",
+        'head_injury': "no",
+        'neck_injury': "no",
+        'chest_injury': "no",
+        'abd_injury': "no",
+        'hpi-other-injuries': "Reports minor scrape on right elbow, no other injuries.",
+        'hpi-location': "Mid-shaft of the right tibia.",
+        'hpi-duration': "Constant since injury 2 hours ago.",
+        'hpi-character': "Severe, sharp pain, rated 9/10.",
+        'hpi-aggravating': "Any movement of the leg, attempting to stand.",
+        'hpi-alleviating': "Immobilization, slight relief with keeping leg still.",
+        'hpi-related-symptoms': "Significant swelling noted immediately, visible deformity (angulation) of the lower leg. No open wound.",
+        'hpi-pertinent-negatives': "No numbness or tingling in the foot. No history of prior injury to this leg. No fever or chills.",
+        'hpi-timing': "Constant since injury.",
+        'hpi-severity': "9/10 currently.",
+        'hpi-functional-limitations': "Unable to bear any weight on the right leg. Unable to walk.",
+        'pmh-notes': "Generally healthy. No history of diabetes, osteoporosis, or other significant medical conditions. No previous surgeries.",
+        'past-ortho-notes': "No previous fractures or significant injuries to the right leg.",
+        medications: [{ name: "None", dosage: "", frequency: "" }], // Represent no current meds
+        allergies: [{ name: "NKDA", reaction: "" }], // No Known Drug Allergies
+        'fh-notes': "No family history of bone disorders or significant orthopedic conditions.",
+        'sh-notes': "Software engineer, sedentary job. Lives alone in a 2nd-floor apartment (stairs). Non-smoker, occasional alcohol use. Denies illicit drug use. Recreationally plays badminton weekly.",
+        'ros-notes': "No fever, chills, weight loss. No other joint pains. No chest pain or shortness of breath. No bowel or bladder changes.",
+        'exam-general': "Alert and oriented x3, appears in significant pain. Lying on stretcher with right leg splinted by paramedics.",
+        'exam-look': "Right lower leg shows obvious deformity (angulation) in the mid-shaft region. Significant swelling present. Skin is intact, no open wounds. Mild bruising starting to appear. Compared to the left leg, there is clear shortening and external rotation deformity.",
+        'exam-feel': "Right lower leg is warm to touch compared to the left. Diffuse tenderness maximal over the mid-shaft tibia. Swelling is tense. No crepitus elicited due to pain and splinting. Bony landmarks difficult to palpate accurately due to swelling.",
+        'exam-move': "Active and passive range of motion of the right ankle and knee severely limited by pain. Not attempted further.",
+        'exam-measurements': "Clinical shortening noted.",
+        'exam-special-tests': "Not applicable / deferred due to obvious fracture and pain.",
+        'exam-neuro': "Distal sensation intact to light touch in all dermatomes of the foot. Able to dorsiflex and plantarflex the ankle weakly (limited by pain), EHL power appears grossly intact (difficult to assess fully).",
+        'exam-vascular': "Distal pulses (Dorsalis Pedis and Posterior Tibial) palpable and strong (2+). Capillary refill in toes < 2 seconds. Foot is warm and pink.",
+        'exam-related': "Examination of the right knee and ankle joints reveals no gross instability or associated injury, although limited by pain.",
+        'summary-clinical': "25-year-old male software engineer presented with severe right lower leg pain (9/10), swelling, deformity, and inability to bear weight immediately following a twisting fall on stairs 2 hours ago. Examination reveals obvious mid-shaft deformity, significant swelling, and tenderness over the tibia. Distal neurovascular status is intact currently. Skin is closed.",
+        'summary-ddx-history': "1. Tibial shaft fracture\n2. Fibular fracture (possibly associated)\n3. Severe soft tissue injury/contusion (less likely given deformity)",
+        'summary-ddx-exam': "1. Closed, displaced fracture of the right tibial shaft (likely mid-shaft)\n2. Possible associated fibular fracture",
+        'summary-provisional': "Closed, displaced right tibial shaft fracture.",
+        'summary-plan': "1. Pain management (e.g., IV Morphine)\n2. X-rays of Right Tibia and Fibula (AP and Lateral views, including knee and ankle joints)\n3. Reduction and immobilization (e.g., POP backslab)\n4. Neurovascular checks\n5. Orthopedic consultation for definitive management (likely surgical - IM nailing)."
+    };
 
     // --- Hint Content ---
     const hintContent = {
