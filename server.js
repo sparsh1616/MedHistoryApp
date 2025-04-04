@@ -62,7 +62,12 @@ async function initializeDatabase() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
-    console.log('Users table is ready.');
+    // Add new columns if they don't exist (idempotent)
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE;');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT;');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS study_year TEXT;');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS institute TEXT;');
+    console.log('Users table schema updated (if necessary).');
 
     // Create cases table if it doesn't exist
     await pool.query(`
