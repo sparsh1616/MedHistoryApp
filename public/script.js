@@ -415,6 +415,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('viva-continue-btn')?.addEventListener('click', extendVivaTimer);
         document.getElementById('viva-force-end-btn')?.addEventListener('click', endViva); // Re-use endViva
 
+        // Add event listener to mode selection radio buttons to update button state
+        document.querySelectorAll('.viva-mode-selection input[name="viva-mode"]').forEach(radio => {
+            radio.addEventListener('change', updateVivaButtonState);
+        });
+
         console.log("DEBUG: Button setup complete.");
     }
 
@@ -1206,11 +1211,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (startButton) {
             const selectedMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam';
-            if (selectedMode === 'exam') {
-                 startButton.disabled = vivaInProgress || !hasDataForExam || !isLoggedIn;
-            } else { // Learning or Dummy mode only require login
-                 startButton.disabled = vivaInProgress || !isLoggedIn;
+            let isDisabled = true; // Start assuming disabled
+
+            if (!vivaInProgress && isLoggedIn) { // Can only start if logged in and not already in progress
+                if (selectedMode === 'exam') {
+                    isDisabled = !hasDataForExam; // Exam mode requires data
+                } else { // Learning or Dummy mode only require login
+                    isDisabled = false; 
+                }
+            } else if (vivaInProgress) {
+                isDisabled = true; // Always disabled if viva is in progress
+            } else { // Not logged in
+                 isDisabled = true;
             }
+            startButton.disabled = isDisabled;
         }
 
 
@@ -1218,7 +1232,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (vivaModeSelection) vivaModeSelection.style.display = vivaInProgress ? 'none' : 'block';
 
         // Control visibility/state of chat elements
-        if (chatSection) chatSection.style.display = vivaInProgress ? 'block' : 'none';
+        // Note: We no longer hide the chat section itself, it's treated as a regular section
+        // if (chatSection) chatSection.style.display = vivaInProgress ? 'block' : 'none'; 
         if (endButton) endButton.style.display = vivaInProgress ? 'inline-block' : 'none'; // Show end button only during viva
         if (chatInput) chatInput.disabled = !vivaInProgress;
         if (sendButton) sendButton.disabled = !vivaInProgress;
@@ -1308,7 +1323,7 @@ Wait for the user's response specifying the case type.`;
         showNotification(`AI ${currentVivaMode} Session started!`, 'info');
         // startVivaTimer(VIVA_INITIAL_DURATION); // Start the timer - Keep commented out for now
 
-        // Show the AI chat section
+        // Show the AI chat section using navigation logic
         showSection('ai-viva-chat');
         updateActiveNav(document.querySelector('[data-section="ai-viva-chat"]'));
 
