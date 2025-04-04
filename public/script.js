@@ -1200,9 +1200,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const sendButton = document.getElementById('send-chat-message');
         const chatSection = document.getElementById('ai-viva-chat');
 
-        // Enable Start button only if there's some data entered or loaded
-        const hasData = currentCaseId || document.getElementById('cc-notes')?.value.trim() !== ''; // Check currentCaseId too
-        if (startButton) startButton.disabled = vivaInProgress || !hasData;
+        // Enable Start button only if logged in (for dummy/learning) or if case data exists/loaded (for exam)
+        const hasDataForExam = currentCaseId || document.getElementById('cc-notes')?.value.trim() !== '';
+        const isLoggedIn = !!getToken(); 
+        
+        if (startButton) {
+            const selectedMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam';
+            if (selectedMode === 'exam') {
+                 startButton.disabled = vivaInProgress || !hasDataForExam || !isLoggedIn;
+            } else { // Learning or Dummy mode only require login
+                 startButton.disabled = vivaInProgress || !isLoggedIn;
+            }
+        }
+
 
         // Hide mode selection during viva
         if (vivaModeSelection) vivaModeSelection.style.display = vivaInProgress ? 'none' : 'block';
@@ -1213,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chatInput) chatInput.disabled = !vivaInProgress;
         if (sendButton) sendButton.disabled = !vivaInProgress;
 
-         console.log(`DEBUG: Viva button state updated. InProgress: ${vivaInProgress}, HasData: ${hasData}`);
+         console.log(`DEBUG: Viva button state updated. InProgress: ${vivaInProgress}, HasDataForExam: ${hasDataForExam}, IsLoggedIn: ${isLoggedIn}`);
     }
 
     // Renamed from startViva
@@ -1297,6 +1307,11 @@ Wait for the user's response specifying the case type.`;
         updateVivaButtonState();
         showNotification(`AI ${currentVivaMode} Session started!`, 'info');
         // startVivaTimer(VIVA_INITIAL_DURATION); // Start the timer - Keep commented out for now
+
+        // Show the AI chat section
+        showSection('ai-viva-chat');
+        updateActiveNav(document.querySelector('[data-section="ai-viva-chat"]'));
+
 
         // Get the first AI response (examiner question, tutor waiting message, or dummy case prompt)
         // Only call getAIResponse immediately if it's exam mode or the initial dummy prompt

@@ -56,6 +56,10 @@
                             <!-- Group 4: Summary -->
                             <li class="nav-subheading">Summary & Plan</li>
                             <li data-section="summary-diagnosis"><i class="fas fa-lightbulb"></i> Summary & Diagnosis</li>
+                            
+                            <!-- Add AI Professor Nav Item -->
+                            <li class="nav-subheading">AI Tools</li>
+                            <li data-section="ai-viva-chat"><i class="fas fa-robot"></i> AI Professor</li>
                         </ul>
                     </nav>
                 </div>
@@ -455,9 +459,10 @@
                 </div>
 
                  <!-- AI Viva Chat Area -->
-                <div id="ai-viva-chat" class="history-section chat-section">
+                 <!-- Ensure it has history-section class -->
+                <div id="ai-viva-chat" class="history-section chat-section" style="display: none;"> 
                     <div class="viva-header">
-                        <h2>AI Viva Simulation</h2>
+                        <h2>AI Professor Session</h2> <!-- Renamed Header -->
                         <div id="viva-timer-display" class="timer-display">Time: 07:00</div>
                     </div>
                     <div class="chat-window">
