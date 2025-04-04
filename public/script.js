@@ -12,10 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menu-toggle'); // Mobile menu button
     const sidebar = document.querySelector('.sidebar'); // Sidebar element
     const overlay = document.querySelector('.overlay'); // Overlay element
+    const savedCasesSection = document.getElementById('saved-cases-section');
+    const savedCasesListDiv = document.getElementById('saved-cases-list');
+    const loadCaseButton = document.getElementById('load-selected-case');
+    const deleteCaseButton = document.getElementById('delete-selected-case');
+
 
     // --- State Variables ---
     let activeHintPopup = null;
     let currentUserToken = null;
+    let currentCaseId = null; // Track the ID of the currently loaded/edited case
     let vivaInProgress = false; // Initialize viva state
     let currentVivaMode = 'exam'; // Track current mode ('exam', 'learning', 'dummy')
     let isWaitingForDummyCaseType = false; // Flag for dummy case generation state
@@ -71,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setupHints(); // Call hint setup directly
             setupAuth(); // Setup authentication listeners and initial state
             setupMobileToggle(); // Setup mobile sidebar toggle
-            loadSavedData(); // Restore loading saved data (will need modification later for server)
+            // loadSavedData(); // Remove initial load from localStorage
             ensureInitialEntries(); // Ensure at least one med/allergy entry exists visually
             updateVivaButtonState(); // Restore Viva button state check (might depend on login now)
             console.log("DEBUG: App Initialized Successfully."); // Updated log message
@@ -386,15 +392,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Button Setup ---
     function setupButtons() {
         console.log("DEBUG: Setting up buttons...");
-        document.getElementById('save-history')?.addEventListener('click', saveHistory);
+        document.getElementById('save-history')?.addEventListener('click', saveCase); // Renamed function call
         document.getElementById('export-pdf')?.addEventListener('click', exportToPDF);
         document.getElementById('new-history')?.addEventListener('click', confirmNewHistory);
         document.getElementById('add-medication')?.addEventListener('click', addMedicationEntry);
         document.getElementById('add-allergy')?.addEventListener('click', addAllergyEntry);
-        // document.getElementById('load-dummy-case')?.addEventListener('click', loadDummyCase); // Remove listener for static dummy case
-        document.getElementById('start-ai-viva')?.addEventListener('click', startAiProfessor); // Rename function call
-        document.getElementById('end-ai-viva')?.addEventListener('click', endViva); // Re-add AI Viva listener
-        document.getElementById('send-chat-message')?.addEventListener('click', sendStudentMessage); // Re-add AI Viva listener
+        // document.getElementById('load-dummy-case')?.addEventListener('click', loadDummyCase); // Removed listener
+        document.getElementById('start-ai-viva')?.addEventListener('click', startAiProfessor); // Renamed function call
+        document.getElementById('end-ai-viva')?.addEventListener('click', endViva); 
+        document.getElementById('send-chat-message')?.addEventListener('click', sendStudentMessage); 
+        document.getElementById('load-selected-case')?.addEventListener('click', loadSelectedCase); // Add listener
+        document.getElementById('delete-selected-case')?.addEventListener('click', deleteSelectedCase); // Add listener
+
         // Add listener for Enter key in chat input
         document.getElementById('chat-input')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) { // Send on Enter, allow Shift+Enter for newline
@@ -431,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Check initial login state on load
         currentUserToken = localStorage.getItem('authToken');
-        updateAuthUI();
+        updateAuthUI(); // This will also fetch cases if logged in
         console.log("DEBUG: Auth setup complete. Initial token found:", !!currentUserToken);
     }
 
@@ -502,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentUserToken = result.token;
                 localStorage.setItem('authToken', currentUserToken);
                 localStorage.setItem('loggedInUsername', username);
-                updateAuthUI();
+                updateAuthUI(); // Will fetch cases now
                 showNotification('Login successful!', 'success');
             } else {
                 if (authMessage) {
@@ -512,6 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentUserToken = null;
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('loggedInUsername');
+                updateAuthUI(); // Update UI to logged-out state
             }
         } catch (error) {
             if (authMessage) {
@@ -521,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentUserToken = null;
             localStorage.removeItem('authToken');
             localStorage.removeItem('loggedInUsername');
+            updateAuthUI(); // Update UI to logged-out state
         } finally {
             loginForm.querySelector('button[type="submit"]').disabled = false;
         }
@@ -590,9 +601,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleLogout() {
         console.log("DEBUG: Handling logout...");
         currentUserToken = null;
+        currentCaseId = null; // Clear current case ID on logout
         localStorage.removeItem('authToken');
         localStorage.removeItem('loggedInUsername');
-        updateAuthUI();
+        updateAuthUI(); // Will hide saved cases section
         showNotification('Logged out successfully.', 'info');
         // Optionally clear form data or prompt user
         // clearAllFields(); // Decide if logout should clear the current case
@@ -603,25 +615,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const userStatusDiv = document.getElementById('user-status');
         const loggedInUsernameSpan = document.getElementById('logged-in-username');
         const authMessage = document.getElementById('auth-message');
+        const saveButton = document.getElementById('save-history');
 
         if (currentUserToken) {
             // Logged in
             if (authFormsDiv) authFormsDiv.style.display = 'none';
             if (userStatusDiv) userStatusDiv.style.display = 'block';
             if (loggedInUsernameSpan) loggedInUsernameSpan.textContent = localStorage.getItem('loggedInUsername') || 'User';
+            if (savedCasesSection) savedCasesSection.style.display = 'block'; // Show saved cases
+            if (saveButton) saveButton.disabled = false; // Enable save button
+            fetchSavedCases(); // Fetch user's cases
         } else {
             // Logged out
             if (authFormsDiv) authFormsDiv.style.display = 'block';
             if (userStatusDiv) userStatusDiv.style.display = 'none';
+            if (savedCasesSection) savedCasesSection.style.display = 'none'; // Hide saved cases
+            if (savedCasesListDiv) savedCasesListDiv.innerHTML = '<p class="no-cases-message">Login to view saved cases.</p>'; // Reset list
+            if (loadCaseButton) loadCaseButton.disabled = true;
+            if (deleteCaseButton) deleteCaseButton.disabled = true;
+            if (saveButton) saveButton.disabled = true; // Disable save button
             toggleAuthForms(true); // Default to showing login form when logged out
         }
         updateVivaButtonState(); // Viva button might depend on login status
          if (authMessage) authMessage.textContent = ''; // Clear message on UI update
-         // Add logic here later to enable/disable save/load based on login status if needed
     }
 
      function getToken() {
-         return currentUserToken || localStorage.getItem('authToken');
+         // Ensure we always return the current token state
+         return localStorage.getItem('authToken');
      }
 
     // --- Dynamic Entry Logic (Meds/Allergies - Keep this) ---
@@ -689,41 +710,196 @@ document.addEventListener('DOMContentLoaded', function() {
      }
 
 
-    // --- Data Handling (Save, Load, Collect, Populate, Clear - Keep this) ---
-    function saveHistory() {
-        console.log("DEBUG: Saving history...");
-        const historyData = collectFormData();
+    // --- Data Handling (Save, Load, Collect, Populate, Clear - Updated for Backend) ---
+    async function saveCase() { // Renamed from saveHistory, made async
+        const token = getToken();
+        if (!token) {
+            showNotification('You must be logged in to save cases.', 'error');
+            return;
+        }
+        console.log("DEBUG: Saving case to backend...");
+        const caseData = collectFormData();
+        const caseTitle = caseData['patient-name'] || `Case ${new Date().toLocaleString()}`; // Use patient name or timestamp for title
+
+        const url = currentCaseId ? `/api/cases/${currentCaseId}` : '/api/cases';
+        const method = currentCaseId ? 'PUT' : 'POST';
+
         try {
-            localStorage.setItem('orthoHistoryData', JSON.stringify(historyData));
-            showNotification('Case saved successfully!', 'success');
-            console.log("DEBUG: History saved to localStorage.");
-            updateVivaButtonState(); // Restore AI button update
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ case_title: caseTitle, case_data: caseData })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const savedCase = await response.json();
+            currentCaseId = savedCase.id; // Update current case ID after saving/updating
+            showNotification(`Case '${savedCase.case_title}' saved successfully!`, 'success');
+            console.log("DEBUG: Case saved/updated successfully. ID:", currentCaseId);
+            fetchSavedCases(); // Refresh the list of saved cases
+            updateVivaButtonState(); 
         } catch (error) {
-            console.error("DEBUG: Error saving to localStorage:", error);
-            showNotification('Error saving case. Storage might be full.', 'error');
+            console.error("DEBUG: Error saving case:", error);
+            showNotification(`Error saving case: ${error.message}`, 'error');
         }
     }
 
-    function loadSavedData() {
-        console.log("DEBUG: Attempting to load saved data...");
+    async function fetchSavedCases() {
+        const token = getToken();
+        if (!token || !savedCasesListDiv) return;
+
+        console.log("DEBUG: Fetching saved cases...");
+        savedCasesListDiv.innerHTML = '<p>Loading saved cases...</p>'; // Show loading state
+
         try {
-            const savedData = localStorage.getItem('orthoHistoryData');
-            if (savedData) {
-                const historyData = JSON.parse(savedData);
-                populateFormData(historyData);
-                showNotification('Previously saved case loaded.', 'info');
-                console.log("DEBUG: Saved data loaded and populated.");
-            } else {
-                 console.log("DEBUG: No saved data found.");
-                 ensureInitialEntries(); // Make sure default entries are there if nothing loaded
+            const response = await fetch('/api/cases', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
+
+            const cases = await response.json();
+            displaySavedCases(cases);
+
         } catch (error) {
-            console.error("DEBUG: Error loading or parsing saved data:", error);
-            showNotification('Error loading saved case.', 'error');
-            ensureInitialEntries(); // Ensure default entries on error too
+             console.error("DEBUG: Error fetching saved cases:", error);
+             savedCasesListDiv.innerHTML = '<p class="error-message">Error loading cases.</p>';
+             showNotification(`Error fetching cases: ${error.message}`, 'error');
         }
-         updateVivaButtonState(); // Restore AI button update
     }
+
+    function displaySavedCases(cases) {
+        if (!savedCasesListDiv) return;
+        savedCasesListDiv.innerHTML = ''; // Clear previous list/message
+
+        if (!cases || cases.length === 0) {
+            savedCasesListDiv.innerHTML = '<p class="no-cases-message">No cases saved yet.</p>';
+            loadCaseButton.disabled = true;
+            deleteCaseButton.disabled = true;
+            return;
+        }
+
+        const select = document.createElement('select');
+        select.id = 'saved-case-select';
+        select.size = Math.min(cases.length, 5); // Show a few items, make it scrollable via CSS if needed
+        select.style.width = '100%'; // Make dropdown full width of container
+        select.style.marginBottom = '10px';
+
+        cases.forEach(caseItem => {
+            const option = document.createElement('option');
+            option.value = caseItem.id;
+            // Format date nicely
+            const updatedDate = new Date(caseItem.updated_at).toLocaleString();
+            option.textContent = `${caseItem.case_title || `Case ${caseItem.id}`} (Saved: ${updatedDate})`;
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', () => {
+            // Enable/disable buttons based on selection
+            const hasSelection = !!select.value;
+            loadCaseButton.disabled = !hasSelection;
+            deleteCaseButton.disabled = !hasSelection;
+        });
+
+        savedCasesListDiv.appendChild(select);
+        // Initially disable buttons until a selection is made
+        loadCaseButton.disabled = true;
+        deleteCaseButton.disabled = true;
+    }
+
+    async function loadSelectedCase() {
+        const token = getToken();
+        const selectElement = document.getElementById('saved-case-select');
+        const caseId = selectElement?.value;
+
+        if (!token || !caseId) {
+            showNotification('Please select a case to load.', 'warning');
+            return;
+        }
+
+        console.log(`DEBUG: Loading case ID: ${caseId}`);
+        if (!confirm("Loading this case will overwrite any unsaved changes in the current form. Continue?")) {
+            return;
+        }
+
+        try {
+             const response = await fetch(`/api/cases/${caseId}`, {
+                 headers: { 'Authorization': `Bearer ${token}` }
+             });
+
+             if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+             }
+
+             const caseDetails = await response.json();
+             populateFormData(caseDetails.case_data); // Populate form with the fetched data
+             currentCaseId = caseDetails.id; // Set the current case ID
+             showNotification(`Case '${caseDetails.case_title}' loaded successfully.`, 'success');
+             updateVivaButtonState(); // Update buttons
+
+        } catch (error) {
+             console.error("DEBUG: Error loading selected case:", error);
+             showNotification(`Error loading case: ${error.message}`, 'error');
+        }
+    }
+
+    async function deleteSelectedCase() {
+        const token = getToken();
+        const selectElement = document.getElementById('saved-case-select');
+        const caseId = selectElement?.value;
+        const selectedOptionText = selectElement?.options[selectElement.selectedIndex]?.text || `Case ${caseId}`;
+
+
+        if (!token || !caseId) {
+            showNotification('Please select a case to delete.', 'warning');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete "${selectedOptionText}"? This cannot be undone.`)) {
+            return;
+        }
+
+        console.log(`DEBUG: Deleting case ID: ${caseId}`);
+
+         try {
+             const response = await fetch(`/api/cases/${caseId}`, {
+                 method: 'DELETE',
+                 headers: { 'Authorization': `Bearer ${token}` }
+             });
+
+             if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+             }
+
+             showNotification(`Case deleted successfully.`, 'success');
+             if (currentCaseId === parseInt(caseId, 10)) {
+                 currentCaseId = null; // Clear current ID if it was the deleted one
+                 // Optionally clear the form or load default state?
+                 // confirmNewHistory(); // Or just clear?
+             }
+             fetchSavedCases(); // Refresh the list
+
+        } catch (error) {
+             console.error("DEBUG: Error deleting selected case:", error);
+             showNotification(`Error deleting case: ${error.message}`, 'error');
+        }
+    }
+
+
+    // --- Data Handling (Collect, Populate, Clear - Kept original logic, saveHistory modified) ---
+    // loadSavedData() is removed as loading is now handled by fetchSavedCases/loadSelectedCase
 
     function collectFormData() {
         console.log("DEBUG: Collecting form data...");
@@ -731,7 +907,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const fields = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
         fields.forEach(field => {
             if (field.id) {
-                data[field.id] = field.value;
+                // Ensure we don't collect sensitive fields like password if they exist outside auth forms
+                if (!field.id.toLowerCase().includes('password') || field.closest('#auth-forms')) {
+                     data[field.id] = field.value;
+                }
             }
         });
         const radioGroups = ['head_injury', 'neck_injury', 'chest_injury', 'abd_injury'];
@@ -756,12 +935,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 dosage: entry.querySelector('[data-field="med-dosage"]')?.value || '',
                 frequency: entry.querySelector('[data-field="med-frequency"]')?.value || ''
             };
-            if (med.name.trim()) {
+            // Only add if name is present
+            if (med.name && med.name.trim()) {
                 medications.push(med);
             }
         });
-        console.log("DEBUG: Collected medications:", medications.length);
-        return medications;
+        // If no named medications, return an empty array instead of [{name: ""...}]
+        return medications.length > 0 ? medications : [];
     }
 
     function collectAllergies() {
@@ -771,70 +951,100 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: entry.querySelector('[data-field="allergy-name"]')?.value || '',
                 reaction: entry.querySelector('[data-field="allergy-reaction"]')?.value || ''
             };
-            if (allergy.name.trim()) {
+             // Only add if name is present
+            if (allergy.name && allergy.name.trim()) {
                 allergies.push(allergy);
             }
         });
-         console.log("DEBUG: Collected allergies:", allergies.length);
-        return allergies;
+        // If no named allergies, return an empty array
+        return allergies.length > 0 ? allergies : [];
     }
 
     function populateFormData(data) {
         console.log("DEBUG: Populating form data...");
+        // Clear existing fields first before populating
+        clearAllFields(false); // Pass false to prevent confirmation prompt
+
         Object.keys(data).forEach(key => {
+            // Skip meta-fields like medications/allergies arrays here
+            if (key === 'medications' || key === 'allergies') return;
+
             const field = document.getElementById(key);
-            if (field && typeof data[key] === 'string') {
+            if (field) {
                  if (field.tagName === 'INPUT' && field.type === 'radio') {
-                     // Handled below
+                     // Handled below in radioGroups loop
+                 } else if (field.tagName === 'INPUT' && field.type === 'checkbox') {
+                     // Handle checkboxes if needed in the future
+                     // field.checked = !!data[key]; 
                  } else {
-                    field.value = data[key];
+                    // Handle text, number, textarea, select
+                    field.value = data[key] || ''; // Set to empty string if null/undefined
                  }
+            } else {
+                // console.warn(`DEBUG: Field not found for key: ${key}`);
             }
         });
+
+        // Handle radio buttons specifically
         const radioGroups = ['head_injury', 'neck_injury', 'chest_injury', 'abd_injury'];
         radioGroups.forEach(groupName => {
+            // Uncheck all radios in the group first
+            document.querySelectorAll(`input[name="${groupName}"]`).forEach(radio => radio.checked = false);
+            // Check the correct one if data exists
             if (data[groupName]) {
                 const radioToCheck = document.getElementById(`${groupName}_${data[groupName]}`);
                 if (radioToCheck) radioToCheck.checked = true;
+                 // Handle associated text input specifically for head injury
                  if (groupName === 'head_injury' && data[groupName] === 'yes' && data['head_injury_details']) {
                      const detailsField = document.getElementById('head_injury_details');
                      if (detailsField) detailsField.value = data['head_injury_details'];
+                 } else if (groupName === 'head_injury') {
+                      const detailsField = document.getElementById('head_injury_details');
+                      if (detailsField) detailsField.value = ''; // Clear details if 'no' or null
                  }
+            } else if (groupName === 'head_injury') {
+                 const detailsField = document.getElementById('head_injury_details');
+                 if (detailsField) detailsField.value = ''; // Clear details if group value is null
             }
         });
+
+        // Populate dynamic lists (Meds/Allergies)
         const medContainer = document.querySelector('.medication-entries');
-        medContainer.innerHTML = '';
-        medIdCounter = 0; // Reset counter before populating
-        if (data.medications && data.medications.length > 0) {
+        medContainer.innerHTML = ''; // Clear existing entries
+        medIdCounter = 0; // Reset counter
+        if (data.medications && Array.isArray(data.medications) && data.medications.length > 0) {
             data.medications.forEach(medData => {
                 medIdCounter++;
                 medContainer.insertAdjacentHTML('beforeend', createMedicationEntryHTML(medIdCounter, medData));
             });
         } else {
-             addMedicationEntry();
+             addMedicationEntry(); // Add one blank entry if none loaded
         }
+
         const allergyContainer = document.querySelector('.allergy-entries');
-        allergyContainer.innerHTML = '';
-        allergyIdCounter = 0; // Reset counter before populating
-        if (data.allergies && data.allergies.length > 0) {
+        allergyContainer.innerHTML = ''; // Clear existing entries
+        allergyIdCounter = 0; // Reset counter
+        if (data.allergies && Array.isArray(data.allergies) && data.allergies.length > 0) {
             data.allergies.forEach(allergyData => {
                 allergyIdCounter++;
                 allergyContainer.insertAdjacentHTML('beforeend', createAllergyEntryHTML(allergyIdCounter, allergyData));
             });
         } else {
-             addAllergyEntry();
+             addAllergyEntry(); // Add one blank entry if none loaded
         }
         console.log("DEBUG: Form data population complete.");
     }
 
     function confirmNewHistory() {
+        // Add check if current form has unsaved changes compared to loaded case? (More complex)
         if (confirm("Are you sure you want to start a new case? Any unsaved changes will be lost.")) {
             console.log("DEBUG: Starting new history confirmed.");
-            clearAllFields();
-            localStorage.removeItem('orthoHistoryData');
+            clearAllFields(false); // Clear fields without prompt
+            currentCaseId = null; // Reset current case ID
+            localStorage.removeItem('orthoHistoryData'); // Clear any old localStorage data just in case
             showNotification('New case started. All fields cleared.', 'info');
-            updateVivaButtonState(); // Restore AI button update
-             const firstNavItem = document.querySelector('.history-nav li');
+            updateVivaButtonState(); 
+             const firstNavItem = document.querySelector('.history-nav li[data-section]');
              if (firstNavItem) {
                  const firstSectionId = firstNavItem.getAttribute('data-section');
                  showSection(firstSectionId);
@@ -845,7 +1055,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function clearAllFields() {
+    function clearAllFields(promptUser = true) { // Added optional parameter
+        if (promptUser && !confirm("Clear all fields? This cannot be undone.")) {
+            return; // Don't clear if user cancels prompt
+        }
         console.log("DEBUG: Clearing all fields...");
         const fields = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
         fields.forEach(field => { field.value = ''; });
@@ -855,7 +1068,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('.allergy-entries').innerHTML = '';
         medIdCounter = 0;
         allergyIdCounter = 0;
-        ensureInitialEntries();
+        ensureInitialEntries(); // Ensure blank entries are present
+        currentCaseId = null; // Reset current case ID when clearing
         console.log("DEBUG: Fields cleared.");
     }
 
@@ -1194,10 +1408,8 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
          });
 
          // Check if we parsed *any* data that matches form IDs
-         const formIds = Object.keys(dummyCaseData); // Use keys from the old dummy data as a reference
-         const foundKeys = Object.keys(parsedData).filter(key => formIds.includes(key));
-
-         if (foundKeys.length > 0) { // If we found at least one matching field
+         // Use a simple check for now: if we found a patient name or age, assume it's case data
+         if (parsedData['patient-name'] || parsedData['patient-age']) { 
              console.log("DEBUG: Parsed some dummy case data, attempting to populate form:", parsedData);
              if (confirm("AI generated a case. Load it into the form? This will overwrite current data.")) {
                  populateFormData(parsedData); // Use the parsed data
