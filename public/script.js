@@ -308,12 +308,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.addEventListener('click', (event) => {
-                // Use closest() to find the nearest ancestor that is a hint icon,
-                // including the element itself if it's the icon.
-                const hintIcon = event.target.closest('.hint-icon'); 
+                let hintIcon = null;
+                // Check if the clicked element itself is the icon
+                if (event.target.matches('.hint-icon')) {
+                    hintIcon = event.target;
+                } else {
+                    // Check if the click was inside a label, legend, or h2 that contains a hint icon
+                    // This handles clicks on the text part of these elements
+                    const parentContainer = event.target.closest('label, legend, h2');
+                    if (parentContainer) {
+                        hintIcon = parentContainer.querySelector('.hint-icon');
+                    }
+                }
 
-                // Only proceed if the click target was actually the icon or inside it.
-                if (hintIcon) { 
+                if (hintIcon) {
                     event.stopPropagation(); // Prevent document click listener from closing immediately
                     const hintKey = hintIcon.getAttribute('data-hint-key');
                     if (!hintKey) { 
