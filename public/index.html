@@ -60,6 +60,21 @@
                     </nav>
                 </div>
 
+                <!-- Saved Cases Section -->
+                <div class="sidebar-section" id="saved-cases-section" style="display: none;"> <!-- Hidden initially -->
+                     <h3 class="sidebar-header">
+                        <i class="fas fa-folder-open"></i> Saved Cases
+                    </h3>
+                    <div id="saved-cases-list">
+                        <!-- List of saved cases will be populated here -->
+                        <p>No cases saved yet.</p> 
+                    </div>
+                    <div id="saved-cases-actions" style="margin-top: 10px;">
+                         <button id="load-selected-case" class="btn primary small-btn" disabled>Load Selected</button>
+                         <button id="delete-selected-case" class="btn danger small-btn" disabled style="background-color: var(--danger-color); color: white;">Delete Selected</button>
+                    </div>
+                </div>
+
 
                 <!-- Authentication Section -->
                 <div class="sidebar-section auth-section">
