@@ -108,6 +108,7 @@
                     <button id="save-history" class="btn primary"><i class="fas fa-save"></i> Save Case</button>
                     <button id="export-pdf" class="btn secondary"><i class="fas fa-file-pdf"></i> Export as PDF</button>
                     <button id="new-history" class="btn secondary"><i class="fas fa-plus"></i> New Case</button>
+                    <!-- Removed Load Dummy Case Button -->
                     
                     <!-- AI Viva Mode Selection -->
                     <div class="viva-mode-selection">
@@ -120,9 +121,13 @@
                             <input type="radio" id="viva-mode-learning" name="viva-mode" value="learning">
                             <label for="viva-mode-learning">Learning Mode</label>
                         </div>
+                        <div class="radio-group">
+                            <input type="radio" id="viva-mode-dummy" name="viva-mode" value="dummy">
+                            <label for="viva-mode-dummy">Dummy Case Mode</label>
+                        </div>
                     </div>
                     
-                    <button id="start-ai-viva" class="btn ai-btn" disabled><i class="fas fa-robot"></i> Start AI Session</button>
+                    <button id="start-ai-viva" class="btn ai-btn" disabled><i class="fas fa-robot"></i> AI Professor</button> <!-- Renamed Button -->
                 </div>
             </div>
 

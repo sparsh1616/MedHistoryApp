@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let activeHintPopup = null;
     let currentUserToken = null;
     let vivaInProgress = false; // Initialize viva state
+    let currentVivaMode = 'exam'; // Track current mode ('exam', 'learning', 'dummy')
+    let isWaitingForDummyCaseType = false; // Flag for dummy case generation state
     let vivaTimerInterval = null; // Variable to hold the timer interval ID
     let vivaTimeRemaining = 0; // Time remaining in seconds
     const VIVA_INITIAL_DURATION = 7 * 60; // 7 minutes
@@ -24,55 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let aiConversationHistory = []; // Store { role: 'user'/'assistant', content: 'message' }
     let medIdCounter = 0;
     let allergyIdCounter = 0;
-
-    // --- Dummy Case Data ---
-    const dummyCaseData = {
-        'patient-name': "Anil Kumar",
-        'patient-age': "25",
-        'patient-gender': "male",
-        'patient-occupation': "Software Engineer",
-        'patient-handedness': "right",
-        'patient-address': "123 Tech Park, Bangalore",
-        'cc-notes': "Pain and swelling in the right lower leg after a fall, unable to bear weight. Happened 2 hours ago.",
-        'hpi-onset': "Sudden onset, 2 hours ago.",
-        'hpi-moi': "Patient reports slipping on a wet floor while walking down stairs. He fell directly onto his right leg with a twisting motion. Heard a 'crack' sound.",
-        'head_injury': "no",
-        'neck_injury': "no",
-        'chest_injury': "no",
-        'abd_injury': "no",
-        'hpi-other-injuries': "Reports minor scrape on right elbow, no other injuries.",
-        'hpi-location': "Mid-shaft of the right tibia.",
-        'hpi-duration': "Constant since injury 2 hours ago.",
-        'hpi-character': "Severe, sharp pain, rated 9/10.",
-        'hpi-aggravating': "Any movement of the leg, attempting to stand.",
-        'hpi-alleviating': "Immobilization, slight relief with keeping leg still.",
-        'hpi-related-symptoms': "Significant swelling noted immediately, visible deformity (angulation) of the lower leg. No open wound.",
-        'hpi-pertinent-negatives': "No numbness or tingling in the foot. No history of prior injury to this leg. No fever or chills.",
-        'hpi-timing': "Constant since injury.",
-        'hpi-severity': "9/10 currently.",
-        'hpi-functional-limitations': "Unable to bear any weight on the right leg. Unable to walk.",
-        'pmh-notes': "Generally healthy. No history of diabetes, osteoporosis, or other significant medical conditions. No previous surgeries.",
-        'past-ortho-notes': "No previous fractures or significant injuries to the right leg.",
-        medications: [{ name: "None", dosage: "", frequency: "" }], // Represent no current meds
-        allergies: [{ name: "NKDA", reaction: "" }], // No Known Drug Allergies
-        'fh-notes': "No family history of bone disorders or significant orthopedic conditions.",
-        'sh-notes': "Software engineer, sedentary job. Lives alone in a 2nd-floor apartment (stairs). Non-smoker, occasional alcohol use. Denies illicit drug use. Recreationally plays badminton weekly.",
-        'ros-notes': "No fever, chills, weight loss. No other joint pains. No chest pain or shortness of breath. No bowel or bladder changes.",
-        'exam-general': "Alert and oriented x3, appears in significant pain. Lying on stretcher with right leg splinted by paramedics.",
-        'exam-look': "Right lower leg shows obvious deformity (angulation) in the mid-shaft region. Significant swelling present. Skin is intact, no open wounds. Mild bruising starting to appear. Compared to the left leg, there is clear shortening and external rotation deformity.",
-        'exam-feel': "Right lower leg is warm to touch compared to the left. Diffuse tenderness maximal over the mid-shaft tibia. Swelling is tense. No crepitus elicited due to pain and splinting. Bony landmarks difficult to palpate accurately due to swelling.",
-        'exam-move': "Active and passive range of motion of the right ankle and knee severely limited by pain. Not attempted further.",
-        'exam-measurements': "Clinical shortening noted.",
-        'exam-special-tests': "Not applicable / deferred due to obvious fracture and pain.",
-        'exam-neuro': "Distal sensation intact to light touch in all dermatomes of the foot. Able to dorsiflex and plantarflex the ankle weakly (limited by pain), EHL power appears grossly intact (difficult to assess fully).",
-        'exam-vascular': "Distal pulses (Dorsalis Pedis and Posterior Tibial) palpable and strong (2+). Capillary refill in toes < 2 seconds. Foot is warm and pink.",
-        'exam-related': "Examination of the right knee and ankle joints reveals no gross instability or associated injury, although limited by pain.",
-        'summary-clinical': "25-year-old male software engineer presented with severe right lower leg pain (9/10), swelling, deformity, and inability to bear weight immediately following a twisting fall on stairs 2 hours ago. Examination reveals obvious mid-shaft deformity, significant swelling, and tenderness over the tibia. Distal neurovascular status is intact currently. Skin is closed.",
-        'summary-ddx-history': "1. Tibial shaft fracture\n2. Fibular fracture (possibly associated)\n3. Severe soft tissue injury/contusion (less likely given deformity)",
-        'summary-ddx-exam': "1. Closed, displaced fracture of the right tibial shaft (likely mid-shaft)\n2. Possible associated fibular fracture",
-        'summary-provisional': "Closed, displaced right tibial shaft fracture.",
-        'summary-plan': "1. Pain management (e.g., IV Morphine)\n2. X-rays of Right Tibia and Fibula (AP and Lateral views, including knee and ankle joints)\n3. Reduction and immobilization (e.g., POP backslab)\n4. Neurovascular checks\n5. Orthopedic consultation for definitive management (likely surgical - IM nailing)."
-    };
 
     // --- Hint Content ---
     const hintContent = {
@@ -308,20 +261,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.addEventListener('click', (event) => {
-                let hintIcon = null;
-                // Check if the clicked element itself is the icon
-                if (event.target.matches('.hint-icon')) {
-                    hintIcon = event.target;
-                } else {
-                    // Check if the click was inside a label, legend, or h2 that contains a hint icon
-                    // This handles clicks on the text part of these elements
-                    const parentContainer = event.target.closest('label, legend, h2');
-                    if (parentContainer) {
-                        hintIcon = parentContainer.querySelector('.hint-icon');
-                    }
-                }
+                // Use closest() to find the nearest ancestor that is a hint icon,
+                // including the element itself if it's the icon.
+                const hintIcon = event.target.closest('.hint-icon'); 
 
-                if (hintIcon) {
+                // Only proceed if the click target was actually the icon or inside it.
+                if (hintIcon) { 
                     event.stopPropagation(); // Prevent document click listener from closing immediately
                     const hintKey = hintIcon.getAttribute('data-hint-key');
                     if (!hintKey) { 
@@ -446,7 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('new-history')?.addEventListener('click', confirmNewHistory);
         document.getElementById('add-medication')?.addEventListener('click', addMedicationEntry);
         document.getElementById('add-allergy')?.addEventListener('click', addAllergyEntry);
-        document.getElementById('start-ai-viva')?.addEventListener('click', startViva); // Re-add AI Viva listener
+        // document.getElementById('load-dummy-case')?.addEventListener('click', loadDummyCase); // Remove listener for static dummy case
+        document.getElementById('start-ai-viva')?.addEventListener('click', startAiProfessor); // Rename function call
         document.getElementById('end-ai-viva')?.addEventListener('click', endViva); // Re-add AI Viva listener
         document.getElementById('send-chat-message')?.addEventListener('click', sendStudentMessage); // Re-add AI Viva listener
         // Add listener for Enter key in chat input
@@ -462,6 +408,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log("DEBUG: Button setup complete.");
     }
+
+    // --- Dummy Case Loader --- (REMOVED - Handled by AI now)
+    // function loadDummyCase() { ... }
 
     // --- Authentication Logic ---
     function setupAuth() {
@@ -666,7 +615,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (userStatusDiv) userStatusDiv.style.display = 'none';
             toggleAuthForms(true); // Default to showing login form when logged out
         }
--         updateVivaButtonState(); // Viva button might depend on login status
+        updateVivaButtonState(); // Viva button might depend on login status
+         if (authMessage) authMessage.textContent = ''; // Clear message on UI update
          // Add logic here later to enable/disable save/load based on login status if needed
     }
 
@@ -1038,14 +988,16 @@ document.addEventListener('DOMContentLoaded', function() {
          console.log(`DEBUG: Viva button state updated. InProgress: ${vivaInProgress}, HasData: ${hasData}`);
     }
 
-    function startViva() {
+    // Renamed from startViva
+    function startAiProfessor() { 
         if (vivaInProgress) return;
 
         // Determine selected mode
-        const selectedMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam'; // Default to exam mode
-        console.log(`DEBUG: Starting AI Session in ${selectedMode} mode...`);
+        currentVivaMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam'; // Update global state
+        console.log(`DEBUG: Starting AI Professor Session in ${currentVivaMode} mode...`);
 
         vivaInProgress = true;
+        isWaitingForDummyCaseType = false; // Reset flag
         aiConversationHistory = []; // Reset history
 
         // Prepare initial context for AI
@@ -1053,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let initialPrompt = '';
         let welcomeMessage = '';
 
-        if (selectedMode === 'exam') {
+        if (currentVivaMode === 'exam') {
             welcomeMessage = 'Welcome to the AI Viva Exam! I will ask questions based on your case entry. Preparing first question...';
             // --- Exam Mode Prompt ---
             initialPrompt = `You are an AI examiner simulating a challenging but fair final MBBS Orthopedics viva for a medical student.
@@ -1076,7 +1028,7 @@ ${JSON.stringify(caseSummary, null, 2)}
 
 Begin the examination now with your first question.`;
             // --- End Exam Mode Prompt ---
-        } else { // Learning Mode
+        } else if (currentVivaMode === 'learning') { 
              welcomeMessage = 'Welcome to the AI Learning Session! Ask me anything about orthopedic history taking, examination, investigations, or management based on your case or general principles (undergraduate level).';
              // --- Learning Mode Prompt ---
              initialPrompt = `You are an AI tutor assisting a final MBBS medical student learning Orthopedics.
@@ -1097,6 +1049,14 @@ ${JSON.stringify(caseSummary, null, 2)}
 
 Wait for the student's first question.`;
              // --- End Learning Mode Prompt ---
+        } else { // Dummy Case Mode
+             welcomeMessage = 'Welcome to Dummy Case Mode! Please describe the type of case you want me to generate (e.g., "fractured tibia in a 25 year old male", "polytrauma", "pediatric osteomyelitis").';
+             // --- Dummy Case Initial Prompt ---
+             initialPrompt = `You are an AI assistant helping a medical student generate a dummy orthopedic case for practice.
+Ask the student what type of case they would like to generate. Provide examples like "fractured tibia in a 25 year old male", "polytrauma with multiple fractures", or "chronic osteomyelitis in a 7 year old".
+Wait for the user's response specifying the case type.`;
+             // --- End Dummy Case Initial Prompt ---
+             isWaitingForDummyCaseType = true; // Set flag: waiting for user to specify case
         }
 
 
@@ -1107,21 +1067,26 @@ Wait for the student's first question.`;
         chatMessages.innerHTML = `<div class="message ai">${welcomeMessage}</div>`; // Use mode-specific welcome
 
         updateVivaButtonState();
-        showNotification(`AI ${selectedMode === 'exam' ? 'Exam' : 'Learning'} Session started!`, 'info');
+        showNotification(`AI ${currentVivaMode} Session started!`, 'info');
         // startVivaTimer(VIVA_INITIAL_DURATION); // Start the timer - Keep commented out for now
 
-        // Get the first AI question
-        getAIResponse(); // Call the new async function
+        // Get the first AI response (examiner question, tutor waiting message, or dummy case prompt)
+        // Only call getAIResponse immediately if it's exam mode or the initial dummy prompt
+        if (currentVivaMode === 'exam' || currentVivaMode === 'dummy') {
+             getAIResponse(); // AI asks first question in exam mode, or asks for case type in dummy mode
+        }
+        // In learning mode, the AI waits for the user's first question via the initial prompt.
     }
 
     function endViva() {
         if (!vivaInProgress) return;
         console.log("DEBUG: Ending AI Viva.");
         vivaInProgress = false;
+        isWaitingForDummyCaseType = false; // Reset flag
         // stopVivaTimer(); // Stop the timer - Keep commented out for now
-        addMessageToChat("Viva session ended.", "system");
+        addMessageToChat("AI session ended.", "system");
         updateVivaButtonState();
-        showNotification('AI Viva ended.', 'info');
+        showNotification('AI Session ended.', 'info');
         // Disable chat input after ending
         if (chatInput) chatInput.disabled = true;
         if (sendButton) sendButton.disabled = true;
@@ -1135,7 +1100,28 @@ Wait for the student's first question.`;
         if (messageText) {
             console.log("DEBUG: Sending student message:", messageText.substring(0, 50) + '...');
             addMessageToChat(messageText, "student");
-            aiConversationHistory.push({ role: 'user', content: messageText });
+            
+            // Check if we are in dummy case mode and waiting for the case type
+            if (currentVivaMode === 'dummy' && isWaitingForDummyCaseType) {
+                console.log("DEBUG: Received dummy case type request:", messageText);
+                isWaitingForDummyCaseType = false; // No longer waiting for type
+
+                // Construct a new prompt asking the AI to generate the case
+                const generationPrompt = `Generate a detailed, realistic orthopedic case history and examination findings suitable for a final MBBS viva, based on the following user request: "${messageText}". 
+Structure the output clearly, ideally using headings similar to the app sections (Demographics, Chief Complaint, HPI, PMH, Past Ortho, Meds, Allergies, Family History, Social History, ROS, Examination [General, Look, Feel, Move, Special Tests, Neuro, Vascular], Summary, Differentials, Provisional Diagnosis, Plan). 
+Format the output so it can be easily parsed, perhaps using markdown-like headings (# Heading) or key-value pairs. Ensure all relevant fields are included.`;
+                
+                // Add the user's request and the generation prompt to history
+                aiConversationHistory.push({ role: 'user', content: messageText }); 
+                aiConversationHistory.push({ role: 'system', content: generationPrompt }); // Add the generation instruction
+
+                addMessageToChat("Generating dummy case based on your request...", "system", true);
+
+            } else {
+                 // Normal message flow for Exam or Learning mode, or subsequent messages in Dummy mode
+                 aiConversationHistory.push({ role: 'user', content: messageText });
+            }
+
             chatInput.value = ''; // Clear input field
 
             // Disable input while AI "thinks"
@@ -1161,11 +1147,70 @@ Wait for the student's first question.`;
          } else {
              // Otherwise, sanitize and set text content
              // Correctly escape HTML characters to prevent XSS
-             const sanitizedText = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>'); // Corrected sanitization
+             const sanitizedText = text.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>'); // Corrected HTML entity escaping
              messageDiv.innerHTML = sanitizedText.replace(/\n/g, '<br>'); // Render newlines
          }
          chatMessages.appendChild(messageDiv);
          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+
+         // Attempt to parse and populate form if it's an AI response in dummy mode *after* generation was requested
+         if (sender === 'ai' && currentVivaMode === 'dummy' && !isWaitingForDummyCaseType && !isSystem) {
+             tryToPopulateDummyCase(text);
+         }
+     }
+
+     // --- Attempt to parse AI response and populate form for dummy case ---
+     function tryToPopulateDummyCase(aiResponseText) {
+         console.log("DEBUG: Attempting to parse AI response for dummy case data...");
+         // Basic parsing attempt: Look for key phrases or simple structures.
+         // This is highly dependent on how the AI formats its output and might need significant refinement.
+         // Example: Assume AI uses "Key: Value" pairs or Markdown headings.
+         const lines = aiResponseText.split('\n');
+         const parsedData = {};
+         let currentKey = null;
+
+         // Simple Key: Value parsing (adjust based on observed AI output)
+         lines.forEach(line => {
+             const parts = line.split(':');
+             if (parts.length >= 2) {
+                 const key = parts[0].trim().toLowerCase().replace(/\s+/g, '-'); // Normalize key
+                 const value = parts.slice(1).join(':').trim();
+                 
+                 // Map common variations to form IDs (needs expansion)
+                 if (key.includes('patient-name')) parsedData['patient-name'] = value;
+                 else if (key.includes('age')) parsedData['patient-age'] = value;
+                 else if (key.includes('gender')) parsedData['patient-gender'] = value.toLowerCase();
+                 else if (key.includes('occupation')) parsedData['patient-occupation'] = value;
+                 else if (key.includes('chief-complaint')) parsedData['cc-notes'] = value;
+                 else if (key.includes('hpi') || key.includes('present-illness')) parsedData['present-illness'] = (parsedData['present-illness'] || '') + value + '\n'; // Append HPI parts
+                 else if (key.includes('pmh') || key.includes('past-medical')) parsedData['pmh-notes'] = value;
+                 else if (key.includes('past-ortho')) parsedData['past-ortho-notes'] = value;
+                 // ... add more mappings for other fields based on expected AI output format ...
+                 else if (key.includes('examination')) parsedData['examination'] = (parsedData['examination'] || '') + value + '\n';
+                 else if (key.includes('summary')) parsedData['summary-clinical'] = (parsedData['summary-clinical'] || '') + value + '\n';
+                 else if (key.includes('plan')) parsedData['summary-plan'] = value;
+
+             }
+         });
+
+         // Check if we parsed *any* data that matches form IDs
+         const formIds = Object.keys(dummyCaseData); // Use keys from the old dummy data as a reference
+         const foundKeys = Object.keys(parsedData).filter(key => formIds.includes(key));
+
+         if (foundKeys.length > 0) { // If we found at least one matching field
+             console.log("DEBUG: Parsed some dummy case data, attempting to populate form:", parsedData);
+             if (confirm("AI generated a case. Load it into the form? This will overwrite current data.")) {
+                 populateFormData(parsedData); // Use the parsed data
+                 showNotification('AI-generated dummy case loaded into form.', 'success');
+                 // Optionally switch back to learning/exam mode or end session?
+                 // endViva(); // Or keep session active? Decide UX.
+             } else {
+                  console.log("DEBUG: User cancelled loading AI-generated case.");
+             }
+         } else {
+             console.log("DEBUG: Could not parse structured case data from AI response.");
+             // AI response was likely just text, already displayed by addMessageToChat.
+         }
      }
  
      // --- Timer Logic (Placeholder - Keep commented out for now) ---
@@ -1224,7 +1269,7 @@ Wait for the student's first question.`;
                  const aiMessage = data.response;
 
                  console.log("DEBUG: Received AI response:", aiMessage.substring(0, 100) + '...');
-                 addMessageToChat(aiMessage, "ai");
+                 addMessageToChat(aiMessage, "ai"); // This will now also check for dummy case data
                  aiConversationHistory.push({ role: 'assistant', content: aiMessage });
             }
 
@@ -1240,12 +1285,14 @@ Wait for the student's first question.`;
                  addMessageToChat(`Network error or failed to reach AI. Please check server logs.`, "system", true);
             }
         } finally {
-            // Always re-enable input regardless of success or failure
-            const chatInput = document.getElementById('chat-input');
-            const sendButton = document.getElementById('send-chat-message');
-            if (chatInput) chatInput.disabled = false;
-            if (sendButton) sendButton.disabled = false;
-            if (chatInput) chatInput.focus();
+            // Always re-enable input regardless of success or failure, unless waiting for case type
+            if (!isWaitingForDummyCaseType) {
+                const chatInput = document.getElementById('chat-input');
+                const sendButton = document.getElementById('send-chat-message');
+                if (chatInput) chatInput.disabled = false;
+                if (sendButton) sendButton.disabled = false;
+                if (chatInput) chatInput.focus();
+            }
         }
     }
 
