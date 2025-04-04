@@ -264,22 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Check if the clicked element itself is the icon
                 if (event.target.matches('.hint-icon')) {
                     hintIcon = event.target;
-                } else {
-                    // Check if the click was inside a label, legend, or h2 that contains a hint icon
-                    const parentLabel = event.target.closest('label');
-                    const parentLegend = event.target.closest('legend');
-                    const parentH2 = event.target.closest('h2');
-
-                    if (parentLabel?.querySelector('.hint-icon')) {
-                        hintIcon = parentLabel.querySelector('.hint-icon');
-                    } else if (parentLegend?.querySelector('.hint-icon')) {
-                        hintIcon = parentLegend.querySelector('.hint-icon');
-                    } else if (parentH2?.querySelector('.hint-icon')) {
-                         hintIcon = parentH2.querySelector('.hint-icon');
-                    }
+                // Check if the parent element contains a hint icon (covers clicks on text within label/legend/h2)
+                } else if (event.target.parentElement?.querySelector('.hint-icon')) {
+                    hintIcon = event.target.parentElement.querySelector('.hint-icon');
                 }
-
-                if (hintIcon) { 
+                
+                if (hintIcon) {
                     event.stopPropagation(); // Prevent document click listener from closing immediately
                     const hintKey = hintIcon.getAttribute('data-hint-key');
                     if (!hintKey) { 
