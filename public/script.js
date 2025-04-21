@@ -567,6 +567,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return;
         }
+        // Add username length check
+        if (username.length < 6) {
+             if (authMessage) {
+                 authMessage.textContent = 'Username must be at least 6 characters long.';
+                 authMessage.classList.add('error');
+             }
+             return;
+        }
         if (password.length < 6) {
             if (authMessage) {
                 authMessage.textContent = 'Password must be at least 6 characters long.';
@@ -1259,52 +1267,33 @@ document.addEventListener('DOMContentLoaded', function() {
         let welcomeMessage = '';
 
         if (currentVivaMode === 'exam') {
-            welcomeMessage = 'Welcome to the AI Viva Exam! I will ask questions based on your case entry. Preparing first question...';
+            const studentUsername = localStorage.getItem('loggedInUsername') || 'student'; // Get student username
+            welcomeMessage = `Welcome ${studentUsername}! This is the AI Viva Exam. I will ask questions based on your case entry. Preparing first question...`; // Updated welcome
             // --- Exam Mode Prompt ---
-            initialPrompt = `You are an AI examiner simulating a challenging but fair final-year MBBS Orthopedics viva based on a case the student has already presented. You have access to full case details. The viva must reflect realistic clinical questioning as in a university practical exam.
+            // Corrected prompt without duplicated content
+            initialPrompt = `You are an AI Orthopedics Examiner simulating a final-year MBBS viva.
+The user you are interacting with is the student, named '${studentUsername}'.
+You will be questioning the student based on the patient case data provided below.
 
 🎯 Key Instructions:
-Ask 7 to 10 structured viva questions based on the case.
+1.  **Role:** Act as a clinical examiner. Address the user as '${studentUsername}' or 'student'.
+2.  **Patient:** Refer to the data provided as 'the patient's case', 'this patient', or 'your patient'. **Do NOT address the student using the patient's name.**
+3.  **Questions:** Ask 7 to 10 structured viva questions based *only* on the provided patient case data. Ask ONE question at a time and wait for the student's reply.
+4.  **Flow:** Begin with broad questions (e.g., summarizing the case, initial assessment, provisional diagnosis) and then delve deeper into:
+    *   Specific history details (clarifying ambiguities or omissions).
+    *   Examination findings and their significance.
+    *   Relevant investigations (choice, interpretation).
+    *   Stepwise management (conservative/surgical options, reasoning).
+    *   Potential complications.
+    *   Related orthopedic principles (e.g., classifications, fracture healing, compartment syndrome).
+5.  **Style:** Maintain a professional, clinical, and mildly probing tone. If the student struggles, guide them with clarifying questions rather than giving the answer directly.
+6.  **Ending:** After 7-10 questions, conclude the initial round by asking the student if they wish to continue with more questions.
 
-Ask one question at a time. Wait for student reply before continuing.
-
-Begin with broad, high-level questions (e.g., trauma triage, management steps, provisional diagnosis), and then go deeper into:
-
-History clarification (if crucial points are missing)
-
-Examination details
-
-Investigations and reasoning
-
-Stepwise management
-
-Complications (early/late/systemic)
-
-Related orthopedic principles (classification, implant choices, open fracture care, etc.)
-
-You may also ask: "What important point did you miss while presenting this case?"
-
-🧠 Question Style:
-Mix of recall, reasoning, application, and viva-style grilling.
-
-Avoid spoon-feeding. If the student says "I don't know", nudge their thinking without giving the answer immediately.
-
-If they missed key points, guide them to it by asking counter-questions.
-
-👨‍⚕️ Examiner Personality:
-Clinical, professional, and mildly probing.
-
-Don't over-explain unless the student is completely stuck.
-
-🔚 Ending:
-After 7–10 questions, ask:
-"That completes the initial round of questions. Would you like to go ahead with further questions?"
-
---- Case Data ---
+--- Patient Case Data ---
 ${JSON.stringify(caseSummary, null, 2)}
---- End Case Data ---
+--- End Patient Case Data ---
 
-Start the examination by introducing yourself briefly and asking your first question based on the case data, following the example flow provided in the instructions.`; // Updated final instruction
+Start the examination now by greeting the student ('${studentUsername}') and asking your first question about the patient's case based on the data provided.`;
             // --- End Exam Mode Prompt ---
         } else if (currentVivaMode === 'learning') {
              welcomeMessage = 'Welcome to the AI Learning Session! Ask me anything about orthopedic history taking, examination, investigations, or management based on your case or general principles (undergraduate level).';

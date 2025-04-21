@@ -142,13 +142,15 @@ app.post('/api/auth/register', async (req, res) => {
   // Removed erroneous closing brace from previous attempt here
 
   try {
-    // Check if username already exists using pg pool
-    // Use $1, $2 etc. for placeholders in pg
-    const checkUser = await pool.query('SELECT username FROM users WHERE username = $1', [username]);
+    // Check if username already exists using pg pool (case-insensitive)
+    console.log(`DEBUG: Checking registration for username (case-insensitive): ${username}`); // Added logging
+    const checkUser = await pool.query('SELECT username FROM users WHERE LOWER(username) = LOWER($1)', [username]);
 
     if (checkUser.rows.length > 0) {
+      console.log(`DEBUG: Registration failed - Username already exists: ${username}`); // Added logging
       return res.status(409).json({ message: 'Username already exists.' }); // 409 Conflict
     }
+    console.log(`DEBUG: Username available: ${username}`); // Added logging
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -183,21 +185,27 @@ app.post('/api/auth/login', async (req, res) => { // Make the route handler asyn
   }
 
   try {
-    // Fetch user from database using pg pool
-    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    // Fetch user from database using pg pool (case-insensitive)
+    console.log(`DEBUG: Attempting login for username (case-insensitive): ${username}`); // Added logging
+    const result = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username]);
     const user = result.rows[0]; // Get the first row if found
 
     if (!user) {
+      console.log(`DEBUG: Login failed - User not found (case-insensitive): ${username}`); // Added logging
       // Avoid saying "invalid username" or "invalid password" specifically for security
       return res.status(401).json({ message: 'Invalid credentials.' }); // Unauthorized
     }
+    console.log(`DEBUG: User found (case-insensitive): ${username}`); // Added logging
 
     // Compare submitted password with stored hash
+    console.log(`DEBUG: Comparing password for user: ${username}`); // Added logging
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
+      console.log(`DEBUG: Login failed - Password mismatch for user: ${username}`); // Added logging
       return res.status(401).json({ message: 'Invalid credentials.' }); // Unauthorized
     }
+    console.log(`DEBUG: Password match for user: ${username}`); // Added logging
 
     // Passwords match - Generate JWT
     const payload = {
