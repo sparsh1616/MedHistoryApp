@@ -698,6 +698,11 @@ footer p {
 }
 
 .dashboard-section.active {
+    display: block !important;
+}
+
+/* Ensure dashboard is visible by default */
+#dashboard {
     display: block;
 }
 
@@ -1236,10 +1241,18 @@ footer p {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    height: auto;
+    min-height: 60px;
 }
 
 .app-container {
     padding-top: 80px; /* Account for fixed header */
+    min-height: 100vh;
+}
+
+main {
+    margin-top: 0;
+    padding-top: 0;
 }
 
 /* Global Navigation Dropdown */
@@ -1397,6 +1410,7 @@ footer p {
     border-top: 1px solid #dee2e6;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
+    padding: 8px 0;
 }
 
 .mobile-nav-container {
@@ -1404,6 +1418,7 @@ footer p {
     justify-content: space-around;
     align-items: center;
     padding: 0.5rem;
+    max-width: 100%;
 }
 
 .mobile-nav-btn {
@@ -1561,11 +1576,26 @@ footer p {
     }
 
     .mobile-nav-footer {
-        display: block;
+        display: block !important;
     }
 
     .app-container {
         padding-bottom: 80px; /* Account for fixed footer */
+    }
+
+    .content-area {
+        padding-bottom: 100px; /* Extra space for mobile footer */
+    }
+
+    /* Ensure main content is visible */
+    main {
+        margin-top: 0;
+        padding-top: 20px;
+    }
+
+    /* Make sure dashboard content is visible */
+    .dashboard-section.active {
+        display: block !important;
     }
 }
 
