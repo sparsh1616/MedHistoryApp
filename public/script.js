@@ -9,13 +9,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const continuePromptDiv = document.getElementById('viva-continue-prompt'); // Keep prompt reference
     const continueBtn = document.getElementById('viva-continue-btn'); // Keep button reference
     const forceEndBtn = document.getElementById('viva-force-end-btn'); // Keep button reference
-    const menuToggle = document.getElementById('menu-toggle'); // Mobile menu button
+    const menuToggle = document.getElementById('mobile-menu-toggle'); // Mobile menu button
     const sidebar = document.querySelector('.sidebar'); // Sidebar element
     const overlay = document.querySelector('.overlay'); // Overlay element
     const savedCasesSection = document.getElementById('saved-cases-section');
     const savedCasesListDiv = document.getElementById('saved-cases-list');
     const loadCaseButton = document.getElementById('load-selected-case');
     const deleteCaseButton = document.getElementById('delete-selected-case');
+    const profileBtn = document.getElementById('global-profile-btn');
+    const profileDropdown = document.getElementById('global-profile-dropdown');
+    const profileSettings = document.getElementById('global-profile-settings');
+    const profileLogout = document.getElementById('global-profile-logout');
+    const profileName = document.getElementById('global-profile-name');
+
+    // Terms and Conditions elements
+    const termsLink = document.getElementById('terms-link');
+    const termsModal = document.getElementById('terms-modal');
+    const closeTermsModal = document.getElementById('close-terms-modal');
+    const acceptTermsBtn = document.getElementById('accept-terms-btn');
+    const declineTermsBtn = document.getElementById('decline-terms-btn');
+    const acceptTermsCheckbox = document.getElementById('accept-terms');
+
+    // Auth modal elements
+    const authOverlay = document.getElementById('auth-overlay');
+    const closeAuthBtn = document.getElementById('close-auth-btn');
 
 
     // --- State Variables ---
@@ -72,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initApp() {
         console.log("DEBUG: Initializing App..."); // Updated log message
         try {
-            setupNavigation(); // Restore navigation
+            setupNavigation(); // Setup both sidebar and dashboard navigation
             setupButtons(); // Restore buttons (includes auth buttons now)
             setupHints(); // Call hint setup directly
             setupAuth(); // Setup authentication listeners and initial state
@@ -80,6 +97,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // loadSavedData(); // Remove initial load from localStorage
             ensureInitialEntries(); // Ensure at least one med/allergy entry exists visually
             updateVivaButtonState(); // Restore Viva button state check (might depend on login now)
+
+            // Start with dashboard visible (home page)
+            navigateToDashboardSection('dashboard');
+
             console.log("DEBUG: App Initialized Successfully."); // Updated log message
         } catch (error) {
             console.error("DEBUG: Error during initApp:", error); // Updated log message
@@ -88,41 +109,250 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Navigation Logic ---
     function setupNavigation() {
+        // Setup sidebar navigation (existing)
         const navItems = document.querySelectorAll('.history-nav li');
         const sections = document.querySelectorAll('.history-section');
-        const prevButton = document.getElementById('prev-section');
-        const nextButton = document.getElementById('next-section');
 
-        if (!navItems.length || !sections.length || !prevButton || !nextButton) {
-            console.error("DEBUG: Navigation elements not found!");
-            return;
+        if (navItems.length && sections.length) {
+            console.log("DEBUG: Setting up sidebar navigation...");
+
+            // Initial state: show Patient Demographics, hide others
+            sections.forEach(section => {
+                section.style.display = section.id === 'patient-info' ? 'block' : 'none';
+            });
+            updateActiveNav(document.querySelector('[data-section="patient-info"]'));
+
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionId = item.getAttribute('data-section');
+                    console.log(`DEBUG: Nav item clicked: ${sectionId}`);
+                    showSection(sectionId);
+                    updateActiveNav(item);
+                    // Close sidebar on mobile after selection
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar(false);
+                    }
+                });
+            });
+
+            // Section-specific navigation buttons are now used instead of footer buttons
         }
-        console.log("DEBUG: Setting up navigation...");
 
-        // Initial state: show Patient Demographics, hide others
-        sections.forEach(section => {
-            section.style.display = section.id === 'patient-info' ? 'block' : 'none';
-        });
-        updateActiveNav(document.querySelector('[data-section="patient-info"]'));
+        // Setup dashboard navigation (new)
+        setupDashboardNavigation();
 
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const sectionId = item.getAttribute('data-section');
-                console.log(`DEBUG: Nav item clicked: ${sectionId}`);
-                showSection(sectionId);
-                updateActiveNav(item);
-                // Close sidebar on mobile after selection
-                if (window.innerWidth <= 768) {
-                    toggleSidebar(false);
+        console.log("DEBUG: Navigation setup complete.");
+    }
+
+    // --- Dashboard Navigation ---
+    function setupDashboardNavigation() {
+        const dashboardCards = document.querySelectorAll('.dashboard-card');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const dashboardToggle = document.getElementById('dashboard-toggle');
+
+        console.log("DEBUG: Setting up dashboard navigation...");
+        console.log("DEBUG: Found dashboard cards:", dashboardCards.length);
+
+        // Handle dashboard toggle button (removed as per user request)
+        // Dashboard is now always accessible via home button
+
+        // Handle dashboard card clicks
+        dashboardCards.forEach(card => {
+            const sectionId = card.getAttribute('data-section');
+            console.log(`DEBUG: Setting up card with section: ${sectionId}`);
+            card.addEventListener('click', () => {
+                console.log(`DEBUG: Dashboard card clicked: ${sectionId}`);
+
+                // Update sidebar navigation active state
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                const correspondingNavBtn = document.querySelector(`.nav-button[data-section="${sectionId}"]`);
+                if (correspondingNavBtn) {
+                    correspondingNavBtn.classList.add('active');
                 }
+
+                navigateToDashboardSection(sectionId);
             });
         });
 
-        prevButton.addEventListener('click', navigateToPrevious);
-        nextButton.addEventListener('click', navigateToNext);
+        // Handle sidebar navigation button clicks
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const sectionId = button.getAttribute('data-section');
+                console.log(`DEBUG: Nav button clicked: ${sectionId}`);
 
-        updateNavigationButtons(); // Set initial button states
-        console.log("DEBUG: Navigation setup complete.");
+                // Update active state for sidebar buttons
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                navigateToDashboardSection(sectionId);
+            });
+        });
+
+        // Handle global header navigation buttons
+        const globalNavButtons = document.querySelectorAll('.global-header .nav-btn');
+        globalNavButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const sectionId = button.getAttribute('data-section');
+                console.log(`DEBUG: Global nav button clicked: ${sectionId}`);
+                navigateToDashboardSection(sectionId);
+            });
+        });
+
+        // Handle mobile footer navigation buttons
+        const mobileNavButtons = document.querySelectorAll('.mobile-nav-btn');
+        mobileNavButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const sectionId = button.getAttribute('data-section');
+                console.log(`DEBUG: Mobile nav button clicked: ${sectionId}`);
+                navigateToDashboardSection(sectionId);
+            });
+        });
+
+        // Handle section navigation buttons
+        function setupSectionNavigation() {
+            const prevButtons = document.querySelectorAll('.prev-btn');
+            const nextButtons = document.querySelectorAll('.next-btn');
+
+            prevButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetSection = button.getAttribute('data-section');
+                    if (targetSection) {
+                        showSection(targetSection);
+                        updateActiveNav(document.querySelector(`[data-section="${targetSection}"]`));
+                    }
+                });
+            });
+
+            nextButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetSection = button.getAttribute('data-section');
+                    if (targetSection) {
+                        showSection(targetSection);
+                        updateActiveNav(document.querySelector(`[data-section="${targetSection}"]`));
+                    }
+                });
+            });
+        }
+
+        // Call setupSectionNavigation after DOM is ready
+        setupSectionNavigation();
+    }
+
+    function navigateToDashboardSection(sectionId) {
+        // Update active state for all navigation buttons
+        const allNavButtons = document.querySelectorAll('.nav-btn, .mobile-nav-btn, .nav-button');
+        allNavButtons.forEach(btn => btn.classList.remove('active'));
+        const activeNavBtn = document.querySelector(`[data-section="${sectionId}"]`);
+        if (activeNavBtn) {
+            activeNavBtn.classList.add('active');
+        }
+
+        // Hide all sections first
+        const allSections = document.querySelectorAll('.dashboard-section, .history-section');
+        allSections.forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+        });
+
+        // Hide sidebar by default
+        const sidebar = document.getElementById('main-sidebar');
+        if (sidebar) {
+            sidebar.style.display = 'none';
+        }
+
+        // Special handling for different sections
+        if (sectionId === 'history-taking') {
+            // Show sidebar and patient demographics section
+            if (sidebar) {
+                sidebar.style.display = 'block';
+            }
+            showSection('patient-info');
+            updateActiveNav(document.querySelector('[data-section="patient-info"]'));
+            showNotification('Clinical History Taking loaded.', 'info');
+
+        } else if (sectionId === 'dashboard' || sectionId === 'home') {
+            // Show dashboard (home page)
+            const dashboardSection = document.getElementById('dashboard');
+            if (dashboardSection) {
+                dashboardSection.classList.add('active');
+                dashboardSection.style.display = 'block';
+            }
+            showNotification('Welcome to MedHistoryApp!', 'info');
+
+        } else if (sectionId === 'old-cases') {
+            // Show saved cases section
+            if (!getToken()) {
+                showNotification('Please login to view saved cases.', 'warning');
+                return;
+            }
+            const savedCasesSection = document.getElementById('saved-cases-section');
+            if (savedCasesSection) {
+                savedCasesSection.classList.add('active');
+                savedCasesSection.style.display = 'block';
+                // Fetch and display saved cases
+                fetchSavedCases();
+            }
+            showNotification('Old Cases loaded.', 'info');
+
+        } else if (sectionId === 'ai-tutor') {
+            // Show AI tutor section
+            showSection('ai-viva-chat');
+            updateActiveNav(document.querySelector('[data-section="ai-viva-chat"]'));
+            showNotification('AI Tutor loaded. Select a mode and start your session.', 'info');
+
+        } else if (sectionId === 'x-rays') {
+            // Show X-rays section
+            const xraysSection = document.getElementById('x-rays-section');
+            if (xraysSection) {
+                xraysSection.classList.add('active');
+                xraysSection.style.display = 'block';
+            }
+            showNotification('X-ray Tutor feature coming soon. This will include interactive X-ray interpretation practice.', 'info');
+        } else if (sectionId === 'instruments') {
+            // Show Instruments section
+            const instrumentsSection = document.getElementById('instruments-section');
+            if (instrumentsSection) {
+                instrumentsSection.classList.add('active');
+                instrumentsSection.style.display = 'block';
+            }
+            showNotification('Surgical Instruments feature coming soon. This will include instrument identification and usage practice.', 'info');
+        } else if (sectionId === 'help') {
+            // Show Help section
+            const helpSection = document.getElementById('help-section');
+            if (helpSection) {
+                helpSection.classList.add('active');
+                helpSection.style.display = 'block';
+            }
+            showNotification('Help & Support system coming soon. Get comprehensive assistance with using the app.', 'info');
+        } else {
+            // Default case for any unexpected section IDs
+            console.log(`DEBUG: Unknown section ID: ${sectionId}`);
+            showNotification(`Section "${sectionId}" is under development.`, 'info');
+            // Default case for any unexpected section IDs
+            console.log(`DEBUG: Unknown section ID: ${sectionId}`);
+            showNotification(`Section "${sectionId}" is under development.`, 'info');
+        }
+
+        console.log(`DEBUG: Navigated to section: ${sectionId}`);
+
+        // Show/hide mobile menu toggle based on section and screen size
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        if (mobileMenuToggle) {
+            if (sectionId === 'history-taking' && window.innerWidth <= 768) {
+                mobileMenuToggle.style.display = 'block';
+            } else {
+                mobileMenuToggle.style.display = 'none';
+            }
+        }
+    }
+
+    // Function to hide dashboard
+    function hideDashboard() {
+        const dashboardSection = document.getElementById('dashboard');
+        if (dashboardSection && dashboardSection.classList.contains('active')) {
+            dashboardSection.classList.remove('active');
+            dashboardSection.style.display = 'none';
+        }
     }
 
     function showSection(sectionId) {
@@ -130,13 +360,20 @@ document.addEventListener('DOMContentLoaded', function() {
         sections.forEach(section => {
             section.style.display = section.id === sectionId ? 'block' : 'none';
         });
-        // Scroll to top of section smoothly - Optional, keep if desired
+
+        // Show sidebar when in history mode
+        const sidebar = document.getElementById('main-sidebar');
+        if (sidebar) {
+            sidebar.style.display = 'block';
+        }
+
+        // Scroll to top of section smoothly
         const activeSection = document.getElementById(sectionId);
         if (activeSection) {
-             activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
         console.log(`DEBUG: Showing section: ${sectionId}`);
-        updateNavigationButtons();
     }
 
     function updateActiveNav(activeItem) {
@@ -182,20 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateNavigationButtons() {
-        const navItems = document.querySelectorAll('.history-nav li');
-        const activeItem = document.querySelector('.history-nav li.active');
-        const prevButton = document.getElementById('prev-section');
-        const nextButton = document.getElementById('next-section');
-
-        if (!activeItem || !prevButton || !nextButton) return; // Elements might not be ready
-
-        let currentIndex = Array.from(navItems).indexOf(activeItem);
-
-        prevButton.disabled = currentIndex === 0;
-        nextButton.disabled = currentIndex === navItems.length - 1;
-        console.log(`DEBUG: Updated nav buttons. Prev disabled: ${prevButton.disabled}, Next disabled: ${nextButton.disabled}`);
-    }
+    // Footer navigation buttons removed - using section-specific navigation instead
 
     // --- Mobile Sidebar Toggle Logic ---
     function setupMobileToggle() {
@@ -213,6 +437,17 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.addEventListener('click', () => {
             toggleSidebar(false); // Close sidebar when overlay is clicked
         });
+
+        // Close sidebar when clicking on content area on mobile
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            contentArea.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    toggleSidebar(false);
+                }
+            });
+        }
+
         console.log("DEBUG: Mobile toggle setup complete.");
     }
 
@@ -222,14 +457,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const currentState = sidebar.classList.contains('active');
         const newState = (forceState === undefined) ? !currentState : forceState;
+        const contentArea = document.querySelector('.content-area');
 
         if (newState) {
             sidebar.classList.add('active');
             overlay.classList.add('active');
+            if (window.innerWidth <= 768 && contentArea) {
+                contentArea.style.marginLeft = '280px';
+            }
             console.log("DEBUG: Sidebar opened.");
         } else {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
+            if (contentArea) {
+                contentArea.style.marginLeft = '0px';
+            }
             console.log("DEBUG: Sidebar closed.");
         }
     }
@@ -400,9 +642,125 @@ document.addEventListener('DOMContentLoaded', function() {
         // document.getElementById('load-dummy-case')?.addEventListener('click', loadDummyCase); // Removed listener
         document.getElementById('start-ai-viva')?.addEventListener('click', startAiProfessor); // Renamed function call
         document.getElementById('end-ai-viva')?.addEventListener('click', endViva); 
-        document.getElementById('send-chat-message')?.addEventListener('click', sendStudentMessage); 
+        document.getElementById('send-chat-message')?.addEventListener('click', sendStudentMessage);
         document.getElementById('load-selected-case')?.addEventListener('click', loadSelectedCase); // Add listener
         document.getElementById('delete-selected-case')?.addEventListener('click', deleteSelectedCase); // Add listener
+        document.getElementById('view-case-summary')?.addEventListener('click', viewCaseSummary); // Add listener
+        document.getElementById('start-ai-with-case')?.addEventListener('click', startAITutorWithCase); // Add listener
+        document.getElementById('export-case-pdf')?.addEventListener('click', exportCaseSummaryPDF); // Add listener
+        document.getElementById('close-summary-modal')?.addEventListener('click', closeSummaryModal); // Add listener
+        document.getElementById('close-modal-btn')?.addEventListener('click', closeSummaryModal); // Add listener
+
+        // Close modal when clicking outside
+        const summaryModal = document.getElementById('case-summary-modal');
+        if (summaryModal) {
+            summaryModal.addEventListener('click', (e) => {
+                if (e.target === summaryModal) {
+                    closeSummaryModal();
+                }
+            });
+        }
+
+        // Profile menu functionality
+        if (profileBtn) profileBtn.addEventListener('click', toggleProfileDropdown);
+        if (profileSettings) profileSettings.addEventListener('click', handleProfileSettings);
+        if (profileLogout) profileLogout.addEventListener('click', handleProfileLogout);
+    
+        // Auth buttons functionality
+        document.getElementById('global-show-login')?.addEventListener('click', () => {
+            toggleAuthForms(true);
+            const authFormsDiv = document.getElementById('auth-forms');
+            if (authFormsDiv) {
+                authFormsDiv.style.display = 'flex';
+                authFormsDiv.classList.add('flex');
+            }
+        });
+        document.getElementById('global-show-register')?.addEventListener('click', () => {
+            toggleAuthForms(false);
+            const authFormsDiv = document.getElementById('auth-forms');
+            if (authFormsDiv) {
+                authFormsDiv.style.display = 'flex';
+                authFormsDiv.classList.add('flex');
+            }
+        });
+
+        // Terms and Conditions modal functionality
+        if (termsLink) {
+            termsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (termsModal) termsModal.style.display = 'flex';
+            });
+        }
+
+        if (closeTermsModal) {
+            closeTermsModal.addEventListener('click', () => {
+                if (termsModal) termsModal.style.display = 'none';
+            });
+        }
+
+        if (acceptTermsBtn) {
+            acceptTermsBtn.addEventListener('click', () => {
+                if (acceptTermsCheckbox) acceptTermsCheckbox.checked = true;
+                if (termsModal) termsModal.style.display = 'none';
+                showNotification('Terms and conditions accepted.', 'success');
+            });
+        }
+
+        if (declineTermsBtn) {
+            declineTermsBtn.addEventListener('click', () => {
+                if (acceptTermsCheckbox) acceptTermsCheckbox.checked = false;
+                if (termsModal) termsModal.style.display = 'none';
+                showNotification('You must accept the terms and conditions to register.', 'warning');
+            });
+        }
+
+        // Close terms modal when clicking outside
+        if (termsModal) {
+            termsModal.addEventListener('click', (e) => {
+                if (e.target === termsModal) {
+                    termsModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Auth modal close functionality
+        if (closeAuthBtn) {
+            closeAuthBtn.addEventListener('click', () => {
+                const authFormsDiv = document.getElementById('auth-forms');
+                if (authFormsDiv) {
+                    authFormsDiv.style.display = 'none';
+                    authFormsDiv.classList.remove('flex');
+                }
+            });
+        }
+
+        // Close auth modal when clicking on overlay
+        if (authOverlay) {
+            authOverlay.addEventListener('click', (e) => {
+                if (e.target === authOverlay) {
+                    const authFormsDiv = document.getElementById('auth-forms');
+                    if (authFormsDiv) {
+                        authFormsDiv.style.display = 'none';
+                        authFormsDiv.classList.remove('flex');
+                    }
+                }
+            });
+        }
+
+        // Prevent form submission from closing modal on Enter key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const authFormsDiv = document.getElementById('auth-forms');
+                const termsModal = document.getElementById('terms-modal');
+                if (authFormsDiv && authFormsDiv.style.display === 'flex') {
+                    authFormsDiv.style.display = 'none';
+                    authFormsDiv.classList.remove('flex');
+                }
+                if (termsModal && termsModal.style.display === 'flex') {
+                    termsModal.style.display = 'none';
+                }
+            }
+        });
 
         // Add listener for Enter key in chat input
         document.getElementById('chat-input')?.addEventListener('keypress', function(e) {
@@ -446,6 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check initial login state on load
         currentUserToken = localStorage.getItem('authToken');
         updateAuthUI(); // This will also fetch cases if logged in
+        updateGlobalAuthUI(); // Update global header
         console.log("DEBUG: Auth setup complete. Initial token found:", !!currentUserToken);
     }
 
@@ -517,6 +876,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('authToken', currentUserToken);
                 localStorage.setItem('loggedInUsername', username);
                 updateAuthUI(); // Will fetch cases now
+                updateGlobalAuthUI(); // Update global header
                 showNotification('Login successful!', 'success');
             } else {
                 if (authMessage) {
@@ -567,13 +927,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return;
         }
+
+        // Validate terms acceptance
+        if (!acceptTermsCheckbox || !acceptTermsCheckbox.checked) {
+            if (authMessage) {
+                authMessage.textContent = 'Please read and accept the terms and conditions to register.';
+                authMessage.classList.add('error');
+            }
+            return;
+        }
+
         // Add username length check
         if (username.length < 6) {
-             if (authMessage) {
-                 authMessage.textContent = 'Username must be at least 6 characters long.';
-                 authMessage.classList.add('error');
-             }
-             return;
+              if (authMessage) {
+                  authMessage.textContent = 'Username must be at least 6 characters long.';
+                  authMessage.classList.add('error');
+              }
+              return;
         }
         if (password.length < 6) {
             if (authMessage) {
@@ -654,17 +1024,21 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchSavedCases(); // Fetch user's cases
         } else {
             // Logged out
-            if (authFormsDiv) authFormsDiv.style.display = 'block';
+            if (authFormsDiv) authFormsDiv.style.display = 'none';
             if (userStatusDiv) userStatusDiv.style.display = 'none';
             if (savedCasesSection) savedCasesSection.style.display = 'none'; // Hide saved cases
             if (savedCasesListDiv) savedCasesListDiv.innerHTML = '<p class="no-cases-message">Login to view saved cases.</p>'; // Reset list
             if (loadCaseButton) loadCaseButton.disabled = true;
             if (deleteCaseButton) deleteCaseButton.disabled = true;
+            if (document.getElementById('view-case-summary')) document.getElementById('view-case-summary').disabled = true;
+            if (document.getElementById('start-ai-with-case')) document.getElementById('start-ai-with-case').disabled = true;
             if (saveButton) saveButton.disabled = true; // Disable save button
-            toggleAuthForms(true); // Default to showing login form when logged out
+            // Auth forms will be shown when clicking login/signup buttons
         }
         updateVivaButtonState(); // Viva button might depend on login status
-         if (authMessage) authMessage.textContent = ''; // Clear message on UI update
+        updateProfileDisplay(); // Update profile name in header
+        updateGlobalAuthUI(); // Update global header auth UI
+          if (authMessage) authMessage.textContent = ''; // Clear message on UI update
     }
 
      function getToken() {
@@ -813,6 +1187,8 @@ document.addEventListener('DOMContentLoaded', function() {
             savedCasesListDiv.innerHTML = '<p class="no-cases-message">No cases saved yet.</p>';
             loadCaseButton.disabled = true;
             deleteCaseButton.disabled = true;
+            document.getElementById('view-case-summary').disabled = true;
+            document.getElementById('start-ai-with-case').disabled = true;
             return;
         }
 
@@ -836,12 +1212,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const hasSelection = !!select.value;
             loadCaseButton.disabled = !hasSelection;
             deleteCaseButton.disabled = !hasSelection;
+            document.getElementById('view-case-summary').disabled = !hasSelection;
+            document.getElementById('start-ai-with-case').disabled = !hasSelection;
         });
 
         savedCasesListDiv.appendChild(select);
         // Initially disable buttons until a selection is made
         loadCaseButton.disabled = true;
         deleteCaseButton.disabled = true;
+        document.getElementById('view-case-summary').disabled = true;
+        document.getElementById('start-ai-with-case').disabled = true;
     }
 
     async function loadSelectedCase() {
@@ -872,6 +1252,10 @@ document.addEventListener('DOMContentLoaded', function() {
              const caseDetails = await response.json();
              populateFormData(caseDetails.case_data); // Populate form with the fetched data
              currentCaseId = caseDetails.id; // Set the current case ID
+
+             // Navigate to history taking section
+             navigateToDashboardSection('history-taking');
+
              showNotification(`Case '${caseDetails.case_title}' loaded successfully.`, 'success');
              updateVivaButtonState(); // Update buttons
 
@@ -900,28 +1284,304 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`DEBUG: Deleting case ID: ${caseId}`);
 
          try {
-             const response = await fetch(`/api/cases/${caseId}`, {
-                 method: 'DELETE',
-                 headers: { 'Authorization': `Bearer ${token}` }
-             });
+              const response = await fetch(`/api/cases/${caseId}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${token}` }
+              });
 
-             if (!response.ok) {
-                 const errorData = await response.json();
-                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-             }
+              if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+              }
 
-             showNotification(`Case deleted successfully.`, 'success');
-             if (currentCaseId === parseInt(caseId, 10)) {
-                 currentCaseId = null; // Clear current ID if it was the deleted one
-                 // Optionally clear the form or load default state?
-                 // confirmNewHistory(); // Or just clear?
-             }
-             fetchSavedCases(); // Refresh the list
+              showNotification(`Case deleted successfully.`, 'success');
+              if (currentCaseId === parseInt(caseId, 10)) {
+                  currentCaseId = null; // Clear current ID if it was the deleted one
+                  // Optionally clear the form or load default state?
+                  // confirmNewHistory(); // Or just clear?
+              }
+              fetchSavedCases(); // Refresh the list
+
+         } catch (error) {
+              console.error("DEBUG: Error deleting selected case:", error);
+              showNotification(`Error deleting case: ${error.message}`, 'error');
+         }
+    }
+
+    // --- New Case Management Functions ---
+
+    async function viewCaseSummary() {
+        const token = getToken();
+        const selectElement = document.getElementById('saved-case-select');
+        const caseId = selectElement?.value;
+
+        if (!token || !caseId) {
+            showNotification('Please select a case to view.', 'warning');
+            return;
+        }
+
+        console.log(`DEBUG: Viewing summary for case ID: ${caseId}`);
+
+        try {
+            const response = await fetch(`/api/cases/${caseId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const caseDetails = await response.json();
+            showCaseSummaryModal(caseDetails);
 
         } catch (error) {
-             console.error("DEBUG: Error deleting selected case:", error);
-             showNotification(`Error deleting case: ${error.message}`, 'error');
+            console.error("DEBUG: Error loading case for summary:", error);
+            showNotification(`Error loading case: ${error.message}`, 'error');
         }
+    }
+
+    function showCaseSummaryModal(caseDetails) {
+        const modal = document.getElementById('case-summary-modal');
+        const modalTitle = document.getElementById('modal-case-title');
+        const modalContent = document.getElementById('modal-case-content');
+
+        // Set case title
+        modalTitle.textContent = caseDetails.case_title || `Case ${caseDetails.id}`;
+
+        // Format case content
+        const caseData = caseDetails.case_data;
+        let contentHTML = '';
+
+        // Patient Info
+        contentHTML += '<div class="case-summary-section">';
+        contentHTML += '<h3>Patient Information</h3>';
+        contentHTML += `<p><strong>Name:</strong> ${caseData['patient-name'] || 'Not specified'}</p>`;
+        contentHTML += `<p><strong>Age:</strong> ${caseData['patient-age'] || 'Not specified'}</p>`;
+        contentHTML += `<p><strong>Gender:</strong> ${caseData['patient-gender'] || 'Not specified'}</p>`;
+        contentHTML += `<p><strong>Occupation:</strong> ${caseData['patient-occupation'] || 'Not specified'}</p>`;
+        contentHTML += `<p><strong>Handedness:</strong> ${caseData['patient-handedness'] || 'Not specified'}</p>`;
+        contentHTML += `<p><strong>Address:</strong> ${caseData['patient-address'] || 'Not specified'}</p>`;
+        contentHTML += '</div>';
+
+        // Chief Complaint
+        if (caseData['cc-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Chief Complaint</h3>';
+            contentHTML += `<p>${caseData['cc-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // History of Present Illness
+        const hpiFields = ['hpi-onset', 'hpi-moi', 'hpi-location', 'hpi-character', 'hpi-aggravating', 'hpi-alleviating', 'hpi-severity'];
+        const hpiContent = hpiFields.map(field => caseData[field]).filter(Boolean).join('\n\n');
+        if (hpiContent) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>History of Present Illness</h3>';
+            contentHTML += `<p>${hpiContent.replace(/\n/g, '<br>')}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Past Medical History
+        if (caseData['pmh-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Past Medical History</h3>';
+            contentHTML += `<p>${caseData['pmh-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Past Orthopedic History
+        if (caseData['past-ortho-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Past Orthopedic History</h3>';
+            contentHTML += `<p>${caseData['past-ortho-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Medications
+        if (caseData.medications && caseData.medications.length > 0) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Medications</h3>';
+            caseData.medications.forEach(med => {
+                if (med.name) {
+                    contentHTML += `<p>${med.name} - ${med.dosage || 'N/A'} ${med.frequency || ''}</p>`;
+                }
+            });
+            contentHTML += '</div>';
+        }
+
+        // Allergies
+        if (caseData.allergies && caseData.allergies.length > 0) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Allergies</h3>';
+            caseData.allergies.forEach(allergy => {
+                if (allergy.name) {
+                    contentHTML += `<p>${allergy.name} - ${allergy.reaction || 'Reaction not specified'}</p>`;
+                }
+            });
+            contentHTML += '</div>';
+        }
+
+        // Family History
+        if (caseData['fh-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Family History</h3>';
+            contentHTML += `<p>${caseData['fh-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Social History
+        if (caseData['sh-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Social History</h3>';
+            contentHTML += `<p>${caseData['sh-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Review of Systems
+        if (caseData['ros-notes']) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Review of Systems</h3>';
+            contentHTML += `<p>${caseData['ros-notes']}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Examination
+        const examFields = ['exam-general', 'exam-look', 'exam-feel', 'exam-move', 'exam-special-tests', 'exam-neuro', 'exam-vascular'];
+        const examContent = examFields.map(field => caseData[field]).filter(Boolean).join('\n\n');
+        if (examContent) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Examination</h3>';
+            contentHTML += `<p>${examContent.replace(/\n/g, '<br>')}</p>`;
+            contentHTML += '</div>';
+        }
+
+        // Summary & Diagnosis
+        const summaryFields = ['summary-clinical', 'summary-ddx-history', 'summary-ddx-exam', 'summary-provisional', 'summary-plan'];
+        const summaryContent = summaryFields.map(field => caseData[field]).filter(Boolean).join('\n\n');
+        if (summaryContent) {
+            contentHTML += '<div class="case-summary-section">';
+            contentHTML += '<h3>Summary & Diagnosis</h3>';
+            contentHTML += `<p>${summaryContent.replace(/\n/g, '<br>')}</p>`;
+            contentHTML += '</div>';
+        }
+
+        modalContent.innerHTML = contentHTML;
+        modal.style.display = 'flex';
+    }
+
+    function closeSummaryModal() {
+        const modal = document.getElementById('case-summary-modal');
+        modal.style.display = 'none';
+    }
+
+    async function startAITutorWithCase() {
+        const token = getToken();
+        const selectElement = document.getElementById('saved-case-select');
+        const caseId = selectElement?.value;
+
+        if (!token || !caseId) {
+            showNotification('Please select a case to start AI Tutor.', 'warning');
+            return;
+        }
+
+        console.log(`DEBUG: Starting AI Tutor with case ID: ${caseId}`);
+
+        try {
+            const response = await fetch(`/api/cases/${caseId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const caseDetails = await response.json();
+
+            // Load case data into form
+            populateFormData(caseDetails.case_data);
+            currentCaseId = caseDetails.id;
+
+            // Navigate to AI Tutor section
+            navigateToDashboardSection('ai-tutor');
+
+            showNotification(`Case loaded and AI Tutor started.`, 'success');
+
+        } catch (error) {
+            console.error("DEBUG: Error loading case for AI Tutor:", error);
+            showNotification(`Error loading case: ${error.message}`, 'error');
+        }
+    }
+
+    function exportCaseSummaryPDF() {
+        const modal = document.getElementById('case-summary-modal');
+        const modalTitle = document.getElementById('modal-case-title');
+        const modalContent = document.getElementById('modal-case-content');
+
+        if (typeof jspdf === 'undefined') {
+            showNotification('Error: jsPDF library not loaded.', 'error');
+            return;
+        }
+
+        const { jsPDF } = jspdf;
+        const doc = new jsPDF();
+        let yPos = 15;
+        const pageHeight = doc.internal.pageSize.height;
+        const margin = 10;
+        const lineHeight = 7;
+        const sectionSpacing = 10;
+
+        function addText(text, x, y, options = {}) {
+            if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+            doc.text(text, x, y, options);
+            return y + lineHeight;
+        }
+
+        function addSectionTitle(title, y) {
+            if (y > pageHeight - margin - sectionSpacing) { doc.addPage(); y = margin; }
+            doc.setFont(undefined, 'bold');
+            y = addText(title, margin, y);
+            doc.setFont(undefined, 'normal');
+            return y + (lineHeight / 2);
+        }
+
+        console.log("DEBUG: Generating case summary PDF...");
+
+        // Title
+        doc.setFontSize(16);
+        yPos = addText(modalTitle.textContent, margin, yPos);
+        doc.setFontSize(12);
+        yPos += sectionSpacing;
+
+        // Get all sections from modal
+        const sections = modalContent.querySelectorAll('.case-summary-section');
+        sections.forEach(section => {
+            const title = section.querySelector('h3')?.textContent;
+            if (title) {
+                yPos = addSectionTitle(title, yPos);
+                yPos += lineHeight / 2;
+
+                const paragraphs = section.querySelectorAll('p');
+                paragraphs.forEach(p => {
+                    const text = p.textContent.trim();
+                    if (text) {
+                        // Split long text
+                        const splitText = doc.splitTextToSize(text, doc.internal.pageSize.width - 2 * margin);
+                        splitText.forEach(line => {
+                            yPos = addText(line, margin, yPos);
+                        });
+                        yPos += lineHeight / 2;
+                    }
+                });
+                yPos += sectionSpacing;
+            }
+        });
+
+        const filename = `${modalTitle.textContent.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+        doc.save(filename);
+        showNotification('Case summary PDF exported successfully!', 'success');
+        console.log("DEBUG: Case summary PDF export complete.");
     }
 
 
@@ -1255,7 +1915,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Determine selected mode
         currentVivaMode = document.querySelector('input[name="viva-mode"]:checked')?.value || 'exam'; // Update global state
-        console.log(`DEBUG: Starting AI Professor Session in ${currentVivaMode} mode...`);
+        console.log(`DEBUG: Starting AI Tutor Session in ${currentVivaMode} mode...`);
 
         vivaInProgress = true;
         isWaitingForDummyCaseType = false; // Reset flag
@@ -1614,5 +2274,59 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
 
     // Call registration function after other initializations
     registerServiceWorker();
+
+    // --- Profile Menu Functions ---
+    function toggleProfileDropdown() {
+        if (profileDropdown) {
+            profileDropdown.classList.toggle('active');
+        }
+    }
+
+    function handleProfileSettings(event) {
+        event.preventDefault();
+        showNotification('Settings feature coming soon!', 'info');
+        toggleProfileDropdown();
+    }
+
+    function handleProfileLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+            handleLogout();
+            toggleProfileDropdown();
+        }
+    }
+
+    // Update profile name when user logs in
+    function updateProfileDisplay() {
+        if (profileName && currentUserToken) {
+            const username = localStorage.getItem('loggedInUsername') || 'Student';
+            profileName.textContent = username;
+        } else if (profileName) {
+            profileName.textContent = 'Student';
+        }
+    }
+    
+    // Update global header auth UI
+    function updateGlobalAuthUI() {
+        const profileMenu = document.getElementById('global-profile-menu');
+        const authButtons = document.getElementById('global-auth-buttons');
+    
+        if (currentUserToken) {
+            // Logged in: show profile menu, hide auth buttons
+            if (profileMenu) profileMenu.style.display = 'block';
+            if (authButtons) authButtons.style.display = 'none';
+        } else {
+            // Logged out: hide profile menu, show auth buttons
+            if (profileMenu) profileMenu.style.display = 'none';
+            if (authButtons) authButtons.style.display = 'flex';
+        }
+    }
+
+    // Close profile dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+        if (profileDropdown && profileBtn && !profileBtn.contains(event.target) && !profileDropdown.contains(event.target)) {
+            profileDropdown.classList.remove('active');
+        }
+    });
 
 }); // End DOMContentLoaded

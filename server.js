@@ -3,29 +3,29 @@ const path = require('path');
 const { Pool } = require('pg'); // Use pg Pool
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { GoogleGenerativeAI } = require("@google/generative-ai"); // Use Google Generative AI
+const OpenAI = require('openai'); // Use OpenAI-compatible API (Groq)
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Changed default port to 3001
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_fallback';
-const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY; // Load Gemini key
+const GROQ_API_KEY = process.env.GROQ_API_KEY; // Load Groq key
 
-if (!GEMINI_API_KEY) {
-  console.warn('WARNING: GOOGLE_GEMINI_API_KEY not found in environment variables. AI Viva will not work.');
+if (!GROQ_API_KEY) {
+  console.warn('WARNING: GROQ_API_KEY not found in environment variables. AI Viva will not work.');
 }
 
-// --- Google Generative AI Client Setup ---
-let genAI;
-let geminiModel;
-if (GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  // Try using gemini-1.5-pro-latest
-  geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-  console.log("Google Generative AI client initialized with model: gemini-1.5-pro-latest");
+// --- Groq Client Setup (OpenAI-compatible) ---
+let groq;
+if (GROQ_API_KEY) {
+  groq = new OpenAI({
+    apiKey: GROQ_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+  });
+  console.log("Groq client initialized with Llama model");
 } else {
-   console.log("Google Generative AI client not initialized due to missing API key.");
+    console.log("Groq client not initialized due to missing API key.");
 }
 
 // --- Database Setup (PostgreSQL with Neon) ---
@@ -216,7 +216,7 @@ app.post('/api/auth/login', async (req, res) => { // Make the route handler asyn
 
     // Sign the token
     // Note: In production, use a longer expiry and potentially refresh tokens
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Token expires in 1 hour
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' }); // Token expires in 24 hours
 
     console.log(`User logged in: ${username}`);
     // Send the token back to the client
@@ -368,78 +368,87 @@ app.delete('/api/cases/:id', authenticateToken, async (req, res) => {
 });
 
 
-// --- AI Viva Chat Route (Using Gemini with generateContent) ---
-// Note: This route does NOT require authentication in this example, but you might add it
+// --- AI Viva Chat Route (Using Groq Llama) ---
 app.post('/api/viva/chat', async (req, res) => {
   const { conversationHistory } = req.body; // Expecting { role: 'user'/'assistant'/'system', content: '...' }
 
-  if (!GEMINI_API_KEY || !genAI || !geminiModel) {
-    return res.status(503).json({ message: 'AI service (Gemini) is not configured or initialized.' });
+  if (!GROQ_API_KEY || !groq) {
+    return res.status(503).json({ message: 'AI service (Groq) is not configured or initialized.' });
   }
 
   if (!conversationHistory || !Array.isArray(conversationHistory) || conversationHistory.length === 0) {
     return res.status(400).json({ message: 'Invalid or empty conversation history provided.' });
   }
 
-  // Format history for Gemini's generateContent:
-  // - Map 'assistant' role to 'model'
-  // - Map 'system' role to 'user' (as Gemini doesn't have a distinct system role in the same way for generateContent history)
-  // - Structure content as parts: [{ text: content }]
-  const formattedContents = conversationHistory.map(msg => {
-    let role = 'user'; // Default to user
-    if (msg.role === 'assistant') {
-      role = 'model';
-    } else if (msg.role === 'system') {
-      role = 'user'; // Treat system prompts as user input for context
-    }
-    return {
-      role: role,
-      parts: [{ text: msg.content }]
-    };
-  });
-
-  // Basic validation
-  if (formattedContents.some(item => !item.role || !item.parts || !Array.isArray(item.parts) || item.parts.length === 0 || typeof item.parts[0].text !== 'string')) {
-     return res.status(400).json({ message: 'Each message in history must have a valid role and text content.' });
+  // Validate message format for OpenAI
+  if (conversationHistory.some(msg => !msg.role || !msg.content || typeof msg.content !== 'string')) {
+    return res.status(400).json({ message: 'Each message must have a valid role and content.' });
   }
 
-  console.log("DEBUG: Received chat request for Gemini (generateContent). History length:", formattedContents.length);
+  console.log("DEBUG: Received chat request for OpenAI. History length:", conversationHistory.length);
+
+  // Retry function with exponential backoff
+  const retryWithBackoff = async (fn, maxRetries = 3, baseDelay = 1000) => {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (error.status === 429 && attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000; // Add jitter
+          console.log(`DEBUG: Rate limit exceeded, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+  };
 
   try {
-    const result = await geminiModel.generateContent({
-        contents: formattedContents,
-        // generationConfig: { // Optional
-        //   maxOutputTokens: 200,
-        //   temperature: 0.7,
-        // }
+    const result = await retryWithBackoff(async () => {
+      return await groq.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: conversationHistory,
+        max_tokens: 1000,
+        temperature: 0.7,
+      });
     });
 
-    const response = result.response; // Access the response object directly
-
-    // Check for safety ratings or blocks if necessary (optional but recommended)
-    // if (response.promptFeedback?.blockReason) {
-    //   console.warn("DEBUG: Gemini response blocked:", response.promptFeedback.blockReason);
-    //   return res.status(400).json({ message: `Request blocked due to ${response.promptFeedback.blockReason}` });
-    // }
-
-    const aiResponseText = response.text(); // Use the text() method to get the content
+    const aiResponseText = result.choices[0]?.message?.content;
 
     if (!aiResponseText) {
-      console.error('Gemini API response missing content:', response);
-      // Log candidate details if available
-      if (response.candidates && response.candidates.length > 0) {
-          console.error('Gemini Candidate Finish Reason:', response.candidates[0].finishReason);
-          console.error('Gemini Candidate Safety Ratings:', response.candidates[0].safetyRatings);
-      }
-      return res.status(500).json({ message: 'Failed to get valid text response from AI (Gemini).' });
+      console.error('OpenAI API response missing content:', result);
+      return res.status(500).json({ message: 'Failed to get valid text response from AI (OpenAI).' });
     }
 
-    console.log("DEBUG: Gemini Response received:", aiResponseText.substring(0, 100) + '...');
+    console.log("DEBUG: OpenAI Response received:", aiResponseText.substring(0, 100) + '...');
     res.status(200).json({ response: aiResponseText });
 
   } catch (error) {
-    console.error('Error calling Google Generative AI API (generateContent):', error);
-    res.status(500).json({ message: `Server error during AI chat (Gemini): ${error.message}` });
+    console.error('Error calling OpenAI API:', error);
+
+    // Check if it's a rate limit exceeded error
+    if (error.status === 429) {
+      return res.status(429).json({
+        message: 'AI service rate limit exceeded. You have reached the free tier limits for Groq API.',
+        details: 'Please wait a few minutes before trying again.',
+        retryAfter: 60 // seconds
+      });
+    }
+
+    // Check for other API errors
+    if (error.status >= 400 && error.status < 500) {
+      return res.status(error.status).json({
+        message: 'AI service request error.',
+        details: error.message || 'Please check your request and try again.'
+      });
+    }
+
+    // For server errors or unknown errors
+    res.status(500).json({
+      message: 'Server error during AI chat.',
+      details: 'The AI service is temporarily unavailable. Please try again later.'
+    });
   }
 });
 

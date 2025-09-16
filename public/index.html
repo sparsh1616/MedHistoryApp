@@ -3,30 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrthoHistory - Orthopedic History & Exam Guide</title>
+    <title>MedHistoryApp - Medical Learning Platform</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="manifest" href="/manifest.json"> <!-- Add Manifest Link -->
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body>
-    <div class="overlay"></div> <!-- Add overlay for mobile sidebar -->
+    <div class="overlay"></div>
     <div class="app-container">
-        <header>
-            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
-                <div>
-                    <h1><i class="fas fa-bone"></i> OrthoHistory</h1>
-                    <p>A guide for Orthopedic history taking and examination</p>
+        <header class="global-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 20px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Desktop Navigation Buttons -->
+                    <button class="nav-btn desktop-nav" data-section="dashboard">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="history-taking">
+                        <i class="fas fa-clipboard-list"></i> History
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="old-cases">
+                        <i class="fas fa-folder-open"></i> Cases
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="ai-tutor">
+                        <i class="fas fa-robot"></i> AI Tutor
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="x-rays">
+                        <i class="fas fa-x-ray"></i> X-rays
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="instruments">
+                        <i class="fas fa-tools"></i> Instruments
+                    </button>
+                    <button class="nav-btn desktop-nav" data-section="help">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
                 </div>
-                <div id="login-status" style="margin-left: auto; padding: 0 20px"></div>
+                <div id="global-login-status">
+                    <!-- Logged In State -->
+                    <div class="profile-menu" id="global-profile-menu">
+                        <button class="profile-btn" id="global-profile-btn">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="global-profile-name">Student</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="profile-dropdown" id="global-profile-dropdown">
+                            <a href="#" id="global-profile-settings">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#" id="global-profile-logout">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Logged Out State -->
+                    <div class="auth-buttons" id="global-auth-buttons" style="display: none;">
+                        <button class="btn primary" id="global-show-login">Login</button>
+                        <button class="btn secondary" id="global-show-register">Sign Up</button>
+                    </div>
+                </div>
             </div>
         </header>
 
+        <!-- Authentication Forms -->
+        <div id="auth-forms" style="display: none;">
+            <div class="auth-overlay" id="auth-overlay">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <button class="close-auth-btn" id="close-auth-btn" aria-label="Close">&times;</button>
+                    </div>
+                    <div class="auth-form" id="login-form">
+                        <h2>Login</h2>
+                        <form>
+                            <div class="form-group">
+                                <label for="login-username">Username:</label>
+                                <input type="text" id="login-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password:</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn primary">Login</button>
+                        </form>
+                        <p><a href="#" id="show-register">Don't have an account? Sign up</a></p>
+                    </div>
+                    <div class="auth-form" id="register-form" style="display: none;">
+                        <h2>Sign Up</h2>
+                        <form>
+                            <div class="form-group">
+                                <label for="register-username">Username:</label>
+                                <input type="text" id="register-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password:</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">Email (optional):</label>
+                                <input type="email" id="register-email">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-full-name">Full Name (optional):</label>
+                                <input type="text" id="register-full-name">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-study-year">Study Year (optional):</label>
+                                <input type="text" id="register-study-year">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-institute">Institute (optional):</label>
+                                <input type="text" id="register-institute">
+                            </div>
+
+                            <!-- Disclaimer Section -->
+                            <div class="disclaimer-section">
+                                <div class="disclaimer-text">
+                                    <h4>Important Disclaimer</h4>
+                                    <p>This application is under development and testing purpose only. It is intended solely for educational use by medical students as a digital alternative to handwritten history notes. This is not a clinical tool and must not be used for diagnosis, treatment, or patient care.</p>
+                                    <p>Please ensure that no identifiable patient information (such as original full names, addresses, phone numbers, or hospital IDs) is entered. Use only anonymized data for note-keeping. The developers accept no responsibility for clinical decisions based on the use of this application.</p>
+                                </div>
+
+                                <div class="terms-checkbox">
+                                    <input type="checkbox" id="accept-terms" required>
+                                    <label for="accept-terms">
+                                        I have read and agree to the <a href="#" id="terms-link">Terms and Conditions</a>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn primary">Sign Up</button>
+                        </form>
+                        <p><a href="#" id="show-login">Already have an account? Login</a></p>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div id="auth-message" class="auth-message"></div>
+        </div>
+
+        <!-- Terms and Conditions Modal -->
+        <div id="terms-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Terms and Conditions</h2>
+                    <button class="close-btn" id="close-terms-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h3>1. Purpose and Scope</h3>
+                    <p>This application (MedHistoryApp) is designed exclusively for educational purposes. It serves as a digital tool for medical students to practice and organize clinical history taking skills.</p>
+
+                    <h3>2. Educational Use Only</h3>
+                    <p>This application is NOT a clinical decision support tool and must NOT be used for:</p>
+                    <ul>
+                        <li>Patient diagnosis or treatment decisions</li>
+                        <li>Clinical documentation in healthcare settings</li>
+                        <li>Any form of patient care or medical practice</li>
+                    </ul>
+
+                    <h3>3. Data Privacy and Security</h3>
+                    <p>By using this application, you agree to:</p>
+                    <ul>
+                        <li>Use only anonymized patient data for educational purposes</li>
+                        <li>Not enter any identifiable patient information including:
+                            <ul>
+                                <li>Full names</li>
+                                <li>Addresses</li>
+                                <li>Phone numbers</li>
+                                <li>Hospital IDs</li>
+                                <li>Date of birth (use age instead)</li>
+                            </ul>
+                        </li>
+                        <li>Ensure compliance with all applicable privacy laws and regulations</li>
+                    </ul>
+
+                    <h3>4. User Responsibilities</h3>
+                    <p>As a user of this application, you are responsible for:</p>
+                    <ul>
+                        <li>Using the application only for its intended educational purpose</li>
+                        <li>Maintaining the confidentiality of any data entered</li>
+                        <li>Ensuring that your use complies with your institution's policies</li>
+                        <li>Reporting any technical issues or security concerns</li>
+                    </ul>
+
+                    <h3>5. Limitation of Liability</h3>
+                    <p>The developers and maintainers of this application:</p>
+                    <ul>
+                        <li>Accept no responsibility for clinical decisions made based on information from this app</li>
+                        <li>Are not liable for any damages arising from the use or misuse of this application</li>
+                        <li>Provide this application "as is" without warranties of any kind</li>
+                    </ul>
+
+                    <h3>6. Account and Data Management</h3>
+                    <p>By creating an account:</p>
+                    <ul>
+                        <li>You are responsible for maintaining the security of your account credentials</li>
+                        <li>You acknowledge that case data may be stored temporarily for educational purposes</li>
+                        <li>You may request deletion of your account and associated data at any time</li>
+                    </ul>
+
+                    <h3>7. Updates and Changes</h3>
+                    <p>The developers reserve the right to:</p>
+                    <ul>
+                        <li>Modify these terms and conditions at any time</li>
+                        <li>Update or discontinue the application</li>
+                        <li>Change features or functionality</li>
+                    </ul>
+
+                    <h3>8. Contact Information</h3>
+                    <p>If you have questions about these terms or the application, please contact the development team.</p>
+
+                    <h3>9. Acknowledgment</h3>
+                    <p>By checking the agreement box and creating an account, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn primary" id="accept-terms-btn">I Accept</button>
+                    <button class="btn secondary" id="decline-terms-btn">Decline</button>
+                </div>
+            </div>
+        </div>
+
         <main>
-            <div class="sidebar">
-                <!-- Case Sections -->
+            <!-- Sidebar - Only shown in history taking mode -->
+            <div class="sidebar" id="main-sidebar" style="display: none;">
+                <!-- History Navigation Sidebar -->
                 <div class="sidebar-section">
                     <h3 class="sidebar-header">
                         <i class="fas fa-file-medical-alt"></i> Case Sections
@@ -60,87 +258,12 @@
                     </nav>
                 </div>
 
-                <!-- Saved Cases Section -->
-                <div class="sidebar-section" id="saved-cases-section" style="display: none;"> <!-- Hidden initially -->
-                     <h3 class="sidebar-header">
-                        <i class="fas fa-folder-open"></i> Saved Cases
-                    </h3>
-                    <div id="saved-cases-list" class="saved-cases-container">
-                        <!-- List of saved cases will be populated here by JS -->
-                        <p class="no-cases-message">Login to view saved cases.</p> 
-                    </div>
-                    <div id="saved-cases-actions" style="margin-top: 10px; display: flex; gap: 10px;">
-                         <button id="load-selected-case" class="btn primary small-btn" disabled style="flex: 1;">Load Selected</button>
-                         <button id="delete-selected-case" class="btn danger small-btn" disabled style="flex: 1; background-color: var(--danger-color); color: white;">Delete Selected</button>
-                    </div>
-                </div>
-
-
-                <!-- Authentication Section -->
-                <div class="sidebar-section auth-section">
-                    <h3 class="sidebar-header">
-                        <i class="fas fa-user-circle"></i> Account
-                    </h3>
-                    <div id="auth-forms">
-                        <form id="login-form" class="auth-form">
-                            <h4>Login</h4>
-                            <div class="form-group">
-                                <label for="login-username">Username:</label>
-                                <input type="text" id="login-username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password">Password:</label>
-                                <input type="password" id="login-password" required>
-                            </div>
-                            <button type="submit" class="btn primary">Login</button>
-                            <p class="auth-toggle">Need an account? <a href="#" id="show-register">Register</a></p>
-                        </form>
-                        <form id="register-form" class="auth-form" style="display: none;">
-                            <h4>Register</h4>
-                             <div class="form-group">
-                                <label for="register-username">Username:</label>
-                                <input type="text" id="register-username" required>
-                            </div>
-                             <div class="form-group">
-                                <label for="register-password">Password:</label>
-                                <input type="password" id="register-password" required minlength="6">
-                            </div>
-                             <div class="form-group">
-                                <label for="register-email">Email:</label>
-                                <input type="email" id="register-email"> <!-- Optional, but validated if entered -->
-                            </div>
-                             <div class="form-group">
-                                <label for="register-full-name">Full Name:</label>
-                                <input type="text" id="register-full-name"> <!-- Optional -->
-                            </div>
-                             <div class="form-group">
-                                <label for="register-study-year">Study Year/Level:</label>
-                                <input type="text" id="register-study-year" placeholder="e.g., MBBS 3rd Year, Intern"> <!-- Optional -->
-                            </div>
-                             <div class="form-group">
-                                <label for="register-institute">Institute:</label>
-                                <input type="text" id="register-institute"> <!-- Optional -->
-                            </div>
-                            <button type="submit" class="btn primary">Register</button>
-                            <p class="auth-toggle">Already have an account? <a href="#" id="show-login">Login</a></p>
-                        </form>
-                    </div>
-                     <div id="user-status" style="display: none;">
-                        <p>Logged in as: <strong id="logged-in-username"></strong></p>
-                        <button id="logout-button" class="btn secondary">Logout</button>
-                    </div>
-                    <p id="auth-message" class="auth-message"></p> <!-- For login/register feedback -->
-                </div>
-                <!-- End Authentication Section -->
-
-
-
+                <!-- Action Buttons - Only in history mode -->
                 <div class="actions">
                     <button id="save-history" class="btn primary"><i class="fas fa-save"></i> Save Case</button>
                     <button id="export-pdf" class="btn secondary"><i class="fas fa-file-pdf"></i> Export as PDF</button>
                     <button id="new-history" class="btn secondary"><i class="fas fa-plus"></i> New Case</button>
-                    <!-- Removed Load Dummy Case Button -->
-                    
+
                     <!-- AI Viva Mode Selection -->
                     <div class="viva-mode-selection">
                         <h4>Select AI Session Mode:</h4>
@@ -157,12 +280,82 @@
                             <label for="viva-mode-dummy">Dummy Case Mode</label>
                         </div>
                     </div>
-                    
-                    <button id="start-ai-viva" class="btn ai-btn" disabled><i class="fas fa-robot"></i> AI Professor</button> <!-- Renamed Button -->
+
+                    <button id="start-ai-viva" class="btn ai-btn" disabled><i class="fas fa-robot"></i> AI Tutor</button>
                 </div>
             </div>
 
             <div class="content-area">
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle sidebar menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <!-- Dashboard Home -->
+                <div id="dashboard" class="dashboard-section active">
+                    <div class="dashboard-header">
+                        <div class="header-content">
+                            <div class="header-left">
+                                <h2>Welcome to MedHistoryApp</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" data-section="history-taking">
+                            <div class="card-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h3>Clinical History Taking</h3>
+                            <p>Practice taking patient histories with structured templates</p>
+                            <button class="btn primary card-btn">Start Practice</button>
+                        </div>
+
+                        <div class="dashboard-card" data-section="old-cases">
+                            <div class="card-icon">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <h3>Old Cases</h3>
+                            <p>Review and learn from previously saved cases</p>
+                            <button class="btn primary card-btn">View Cases</button>
+                        </div>
+
+                        <div class="dashboard-card" data-section="ai-tutor">
+                            <div class="card-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h3>AI Tutor</h3>
+                            <p>Get instant feedback and guidance on your cases</p>
+                            <button class="btn primary card-btn">Start Session</button>
+                        </div>
+
+                        <div class="dashboard-card" data-section="x-rays">
+                            <div class="card-icon">
+                                <i class="fas fa-x-ray"></i>
+                            </div>
+                            <h3>X-rays</h3>
+                            <p>Learn to interpret radiological images</p>
+                            <button class="btn secondary card-btn">Coming Soon</button>
+                        </div>
+
+                        <div class="dashboard-card" data-section="instruments">
+                            <div class="card-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <h3>Surgical Instruments</h3>
+                            <p>Identify and learn about surgical instruments</p>
+                            <button class="btn secondary card-btn">Coming Soon</button>
+                        </div>
+
+                        <div class="dashboard-card" data-section="help">
+                            <div class="card-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <h3>Help & Support</h3>
+                            <p>Get help and support for using the app</p>
+                            <button class="btn primary card-btn">Get Help</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Patient Demographics -->
                 <div id="patient-info" class="history-section">
                     <h2>Patient Demographics</h2>
@@ -200,108 +393,83 @@
                         <label for="patient-address">Address:</label>
                         <textarea id="patient-address" placeholder="Enter patient address" rows="3"></textarea>
                     </div>
+                    <div class="section-navigation">
+                        <button class="btn nav-btn prev-btn" data-section="patient-info">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button class="btn nav-btn next-btn" data-section="chief-complaint">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Chief Complaint -->
-                <div id="chief-complaint" class="history-section active">
-                    <h2>Chief Complaint (CC) <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_heading_hint"></i></h2>
+                <div id="chief-complaint" class="history-section">
+                    <h2>Chief Complaint (CC)</h2>
                     <div class="section-info">
                         <p>The patient's main problem in their own words, including duration.</p>
-                        <p><i>Example: "Left knee pain and swelling for 2 weeks after twisting it."</i></p> 
+                        <p><i>Example: "Left knee pain and swelling for 2 weeks after twisting it."</i></p>
                     </div>
                     <div class="form-group">
-                        <label for="cc-notes">Chief Complaint: <i class="fas fa-lightbulb hint-icon" data-hint-key="cc_input_hint"></i></label> 
+                        <label for="cc-notes">Chief Complaint:</label>
                         <textarea id="cc-notes" placeholder="Enter the patient's chief complaint..."></textarea>
-                    </div> 
+                    </div>
+                    <div class="section-navigation">
+                        <button class="btn nav-btn prev-btn" data-section="patient-info">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button class="btn nav-btn next-btn" data-section="present-illness">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- History of Present Illness -->
                 <div id="present-illness" class="history-section">
-                    <h2>History of Present Illness (HPI) <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_heading_hint"></i></h2>
+                    <h2>History of Present Illness (HPI)</h2>
                     <div class="form-group">
                         <label for="hpi-onset">Onset:</label>
                         <textarea id="hpi-onset" placeholder="When did it start? Sudden or gradual?"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="hpi-moi">Mechanism of Injury (MOI) / Onset Description: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_moi_hint"></i></label>
-                        <textarea id="hpi-moi" placeholder="Detailed description of trauma (forces, position) OR how non-traumatic symptoms began..."></textarea>
+                        <label for="hpi-moi">Mechanism of Injury (MOI):</label>
+                        <textarea id="hpi-moi" placeholder="Detailed description of trauma..."></textarea>
                     </div>
-                     <fieldset class="form-group trauma-assessment">
-                        <legend>Associated Trauma Assessment (if applicable) <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_trauma_hint"></i></legend>
-                         <p class="info-text">Document pertinent negatives for trauma cases.</p>
-                        <div class="checkbox-group">
-                            <label>Head Injury / LOC:</label>
-                            <input type="radio" name="head_injury" value="yes" id="head_injury_yes"><label for="head_injury_yes">Yes</label>
-                            <input type="radio" name="head_injury" value="no" id="head_injury_no"><label for="head_injury_no">No</label>
-                            <input type="text" id="head_injury_details" placeholder="Details (LOC duration, headache, vomiting)..." style="margin-left: 10px; flex-grow: 1;">
-                        </div>
-                         <div class="checkbox-group">
-                            <label>Neck Pain/Injury:</label>
-                            <input type="radio" name="neck_injury" value="yes" id="neck_injury_yes"><label for="neck_injury_yes">Yes</label>
-                            <input type="radio" name="neck_injury" value="no" id="neck_injury_no"><label for="neck_injury_no">No</label>
-                        </div>
-                         <div class="checkbox-group">
-                            <label>Chest Pain/Difficulty Breathing:</label>
-                            <input type="radio" name="chest_injury" value="yes" id="chest_injury_yes"><label for="chest_injury_yes">Yes</label>
-                            <input type="radio" name="chest_injury" value="no" id="chest_injury_no"><label for="chest_injury_no">No</label>
-                        </div>
-                         <div class="checkbox-group">
-                            <label>Abdominal Pain:</label>
-                            <input type="radio" name="abd_injury" value="yes" id="abd_injury_yes"><label for="abd_injury_yes">Yes</label>
-                            <input type="radio" name="abd_injury" value="no" id="abd_injury_no"><label for="abd_injury_no">No</label>
-                        </div>
-                         <div class="form-group">
-                             <label for="hpi-other-injuries">Other Injuries Reported/Suspected:</label>
-                             <textarea id="hpi-other-injuries" placeholder="Describe any other injuries..."></textarea>
-                         </div>
-                    </fieldset>
                     <div class="form-group">
                         <label for="hpi-location">Location & Radiation:</label>
                         <textarea id="hpi-location" placeholder="Precise location? Does it radiate?"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="hpi-duration">Duration & Frequency:</label>
-                        <textarea id="hpi-duration" placeholder="How long present? Constant or intermittent?"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="hpi-character">Character: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_character_hint"></i></label>
-                        <textarea id="hpi-character" placeholder="Describe the pain/symptom (sharp, dull, aching, burning, numbness, weakness, instability, locking, clicking...)..."></textarea>
+                        <label for="hpi-character">Character:</label>
+                        <textarea id="hpi-character" placeholder="Describe the pain/symptom..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="hpi-aggravating">Aggravating Factors:</label>
-                        <textarea id="hpi-aggravating" placeholder="What makes it worse? (Activities, positions...)"></textarea>
+                        <textarea id="hpi-aggravating" placeholder="What makes it worse?"></textarea>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <label for="hpi-alleviating">Alleviating Factors:</label>
-                        <textarea id="hpi-alleviating" placeholder="What makes it better? (Rest, medication, ice/heat...)"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="hpi-related-symptoms">Related Symptoms (Local):</label>
-                        <textarea id="hpi-related-symptoms" placeholder="Swelling, bruising, redness, warmth, deformity, grinding, popping?"></textarea>
-                    </div>
-                     <div class="form-group">
-                        <label for="hpi-pertinent-negatives">Pertinent Negatives (Local): <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_pertinent_negatives_hint"></i></label>
-                        <textarea id="hpi-pertinent-negatives" placeholder="Absence of numbness, weakness, locking, instability, fever, chills etc.?"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="hpi-timing">Timing:</label>
-                        <textarea id="hpi-timing" placeholder="Pattern? Worse in morning/night? Related to activity?"></textarea>
+                        <textarea id="hpi-alleviating" placeholder="What makes it better?"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="hpi-severity">Severity:</label>
-                        <textarea id="hpi-severity" placeholder="Pain scale (0-10) at rest and with activity?"></textarea>
+                        <textarea id="hpi-severity" placeholder="Pain scale (0-10)..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="hpi-functional-limitations">Functional Limitations: <i class="fas fa-lightbulb hint-icon" data-hint-key="hpi_functional_limitations_hint"></i></label>
-                        <textarea id="hpi-functional-limitations" placeholder="Impact on ADLs (walking, stairs, dressing), Work, Hobbies/Sports?"></textarea>
+                    <div class="section-navigation">
+                        <button class="btn nav-btn prev-btn" data-section="chief-complaint">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button class="btn nav-btn next-btn" data-section="past-medical">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Past Medical History -->
                 <div id="past-medical" class="history-section">
-                    <h2>Past Medical History (PMH) <i class="fas fa-lightbulb hint-icon" data-hint-key="pmh_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Include significant past diseases, surgeries, hospitalizations, emphasizing conditions relevant to orthopedics (Diabetes, Osteoporosis, RA, Gout, DVT/PE, Cancer).</p>
+                    <h2>Past Medical History (PMH)</h2>
+                    <div class="section-info">
+                        <p>Include significant past diseases, surgeries, hospitalizations.</p>
                     </div>
                     <div class="form-group">
                         <label for="pmh-notes">PMH Details:</label>
@@ -310,10 +478,10 @@
                 </div>
 
                 <!-- Past Orthopedic History -->
-                 <div id="past-ortho" class="history-section">
-                    <h2>Past Orthopedic History <i class="fas fa-lightbulb hint-icon" data-hint-key="past_ortho_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Previous injuries, fractures, dislocations, surgeries, or treatments (physiotherapy, injections) involving the affected area, contralateral limb, or spine? History of arthritis? Note absence of previous issues if confirmed.</p>
+                <div id="past-ortho" class="history-section">
+                    <h2>Past Orthopedic History</h2>
+                    <div class="section-info">
+                        <p>Previous injuries, fractures, dislocations, surgeries...</p>
                     </div>
                     <div class="form-group">
                         <label for="past-ortho-notes">Past Orthopedic History Details:</label>
@@ -323,38 +491,25 @@
 
                 <!-- Medications -->
                 <div id="medications" class="history-section">
-                    <h2>Medications <i class="fas fa-lightbulb hint-icon" data-hint-key="meds_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Document all current medications (prescription, OTC, supplements). Note pain meds, NSAIDs, steroids, anticoagulants, bisphosphonates, DMARDs.</p>
-                    </div>
+                    <h2>Medications</h2>
                     <div class="medication-list">
-                        <button id="add-medication" class="btn secondary"><i class="fas fa-plus"></i> Add Medication</button>
-                        <div class="medication-entries">
-                            <!-- Medication entries will be added here by JS -->
-                        </div>
+                        <button id="add-medication" class="btn secondary">Add Medication</button>
+                        <div class="medication-entries"></div>
                     </div>
                 </div>
 
                 <!-- Allergies -->
                 <div id="allergies" class="history-section">
-                    <h2>Allergies <i class="fas fa-lightbulb hint-icon" data-hint-key="allergies_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Document all allergies (medications, foods, environmental) and the type of reaction.</p>
-                    </div>
-                     <div class="allergy-list">
-                        <button id="add-allergy" class="btn secondary"><i class="fas fa-plus"></i> Add Allergy</button>
-                        <div class="allergy-entries">
-                           <!-- Allergy entries will be added here by JS -->
-                        </div>
+                    <h2>Allergies</h2>
+                    <div class="allergy-list">
+                        <button id="add-allergy" class="btn secondary">Add Allergy</button>
+                        <div class="allergy-entries"></div>
                     </div>
                 </div>
 
                 <!-- Family History -->
                 <div id="family-history" class="history-section">
-                    <h2>Family History (FH) <i class="fas fa-lightbulb hint-icon" data-hint-key="fh_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Focus on conditions like Osteoarthritis, Rheumatoid Arthritis, Osteoporosis, bleeding disorders, hereditary musculoskeletal conditions in first-degree relatives.</p>
-                    </div>
+                    <h2>Family History (FH)</h2>
                     <div class="form-group">
                         <label for="fh-notes">Family History Details:</label>
                         <textarea id="fh-notes" placeholder="Document relevant family medical history..."></textarea>
@@ -363,10 +518,7 @@
 
                 <!-- Social History -->
                 <div id="social-history" class="history-section">
-                    <h2>Social History (SH) <i class="fas fa-lightbulb hint-icon" data-hint-key="sh_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Include Occupation (physical demands), Living Situation (stairs?), Activity Level, Handedness, Tobacco/Alcohol/Drug use.</p>
-                    </div>
+                    <h2>Social History (SH)</h2>
                     <div class="form-group">
                         <label for="sh-notes">Social History Details:</label>
                         <textarea id="sh-notes" placeholder="Document relevant social history..."></textarea>
@@ -375,10 +527,7 @@
 
                 <!-- Review of Systems -->
                 <div id="review-systems" class="history-section">
-                    <h2>Review of Systems (ROS) <i class="fas fa-lightbulb hint-icon" data-hint-key="ros_heading_hint"></i></h2>
-                     <div class="section-info">
-                        <p>Systematic inventory. Document positive and relevant negative findings (e.g., No fever/chills/weight loss, No other joint pain, No bowel/bladder changes).</p>
-                    </div>
+                    <h2>Review of Systems (ROS)</h2>
                     <div class="form-group">
                         <label for="ros-notes">ROS Details:</label>
                         <textarea id="ros-notes" placeholder="Document systematic review of systems..."></textarea>
@@ -387,110 +536,228 @@
 
                 <!-- Examination -->
                 <div id="examination" class="history-section">
-                    <h2>Examination <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_heading_hint"></i></h2>
-                     <div class="form-group">
-                        <label for="exam-general">General Inspection: <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_general_hint"></i></label>
-                        <textarea id="exam-general" placeholder="Patient's condition, posture, gait, aids, initial observation..."></textarea>
+                    <h2>Examination</h2>
+                    <div class="form-group">
+                        <label for="exam-general">General Inspection:</label>
+                        <textarea id="exam-general" placeholder="Patient's condition, posture, gait..."></textarea>
                     </div>
-                    <fieldset class="form-group">
-                        <legend>Local Examination - Affected Area</legend>
-                         <div class="form-group">
-                            <label for="exam-look">Look (Inspection): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_look_hint"></i></label>
-                            <textarea id="exam-look" placeholder="Attitude, Skin (scars, swelling, redness), Shape/Contour (deformity, wasting), Comparison with other side..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-feel">Feel (Palpation): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_feel_hint"></i></label>
-                            <textarea id="exam-feel" placeholder="Temperature, Tenderness (localize), Swelling (consistency, effusion), Crepitus, Specific structures..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-move">Move (Range of Motion): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_move_hint"></i></label>
-                            <textarea id="exam-move" placeholder="Active ROM (degrees, pain), Passive ROM (degrees, end-feel, pain), Comparison with other side..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-measurements">Measurements:</label>
-                            <textarea id="exam-measurements" placeholder="Limb length (True/Apparent), Circumference..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-special-tests">Special Tests: <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_special_tests_hint"></i></label>
-                            <textarea id="exam-special-tests" placeholder="List relevant tests and findings (e.g., Lachman: Positive, McMurray: Negative)..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-neuro">Neurological Examination (Distal): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_neuro_hint"></i></label>
-                            <textarea id="exam-neuro" placeholder="Motor (MRC grade), Sensory (dermatomes), Reflexes..."></textarea>
-                        </div>
-                         <div class="form-group">
-                            <label for="exam-vascular">Vascular Examination (Distal): <i class="fas fa-lightbulb hint-icon" data-hint-key="exam_vascular_hint"></i></label>
-                            <textarea id="exam-vascular" placeholder="Pulses, Capillary Refill, Color, Temperature..."></textarea>
-                        </div>
-                    </fieldset>
-                     <div class="form-group">
-                        <label for="exam-related">Examination of Related Areas:</label>
-                        <textarea id="exam-related" placeholder="Joint above and below, Spine (if relevant)..."></textarea>
+                    <div class="form-group">
+                        <label for="exam-look">Look (Inspection):</label>
+                        <textarea id="exam-look" placeholder="Attitude, Skin, Shape/Contour..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="exam-feel">Feel (Palpation):</label>
+                        <textarea id="exam-feel" placeholder="Temperature, Tenderness, Swelling..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="exam-move">Move (Range of Motion):</label>
+                        <textarea id="exam-move" placeholder="Active ROM, Passive ROM..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="exam-special-tests">Special Tests:</label>
+                        <textarea id="exam-special-tests" placeholder="List relevant tests and findings..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="exam-neuro">Neurological Examination:</label>
+                        <textarea id="exam-neuro" placeholder="Motor, Sensory, Reflexes..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="exam-vascular">Vascular Examination:</label>
+                        <textarea id="exam-vascular" placeholder="Pulses, Capillary Refill, Color..."></textarea>
                     </div>
                 </div>
 
                 <!-- Summary & Diagnosis -->
                 <div id="summary-diagnosis" class="history-section">
-                    <h2>Summary & Diagnosis <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_diagnosis_heading_hint"></i></h2>
+                    <h2>Summary & Diagnosis</h2>
                     <div class="form-group">
-                        <label for="summary-clinical">Clinical Summary: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_clinical_hint"></i></label>
-                        <textarea id="summary-clinical" placeholder="Concise paragraph summarizing key positive and negative findings from history and examination..."></textarea>
+                        <label for="summary-clinical">Clinical Summary:</label>
+                        <textarea id="summary-clinical" placeholder="Concise paragraph summarizing key findings..."></textarea>
                     </div>
-                     <div class="form-group">
-                        <label for="summary-ddx-history">Differential Diagnosis (Based on History Alone): <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_ddx_history_hint"></i></label>
-                        <textarea id="summary-ddx-history" placeholder="Numbered list of possibilities based only on history..."></textarea>
+                    <div class="form-group">
+                        <label for="summary-ddx-history">Differential Diagnosis (History):</label>
+                        <textarea id="summary-ddx-history" placeholder="Numbered list of possibilities..."></textarea>
                     </div>
-                     <div class="form-group">
-                        <label for="summary-ddx-exam">Differential Diagnosis (Based on History & Examination): <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_ddx_exam_hint"></i></label>
-                        <textarea id="summary-ddx-exam" placeholder="Refined numbered list after incorporating examination findings..."></textarea>
+                    <div class="form-group">
+                        <label for="summary-ddx-exam">Differential Diagnosis (History & Exam):</label>
+                        <textarea id="summary-ddx-exam" placeholder="Refined numbered list..."></textarea>
                     </div>
-                     <div class="form-group">
-                        <label for="summary-provisional">Provisional Diagnosis: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_provisional_hint"></i></label>
+                    <div class="form-group">
+                        <label for="summary-provisional">Provisional Diagnosis:</label>
                         <textarea id="summary-provisional" placeholder="Single most likely diagnosis..."></textarea>
                     </div>
-                     <div class="form-group">
-                        <label for="summary-plan">Initial Management / Investigation Plan: <i class="fas fa-lightbulb hint-icon" data-hint-key="summary_plan_hint"></i></label>
-                        <textarea id="summary-plan" placeholder="Outline initial investigations or basic management steps..."></textarea>
+                    <div class="form-group">
+                        <label for="summary-plan">Initial Management Plan:</label>
+                        <textarea id="summary-plan" placeholder="Outline initial investigations or management..."></textarea>
+                    </div>
+                    <div class="section-navigation">
+                        <button class="btn nav-btn prev-btn" data-section="examination">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button class="btn nav-btn next-btn" data-section="summary-diagnosis">
+                            Complete <i class="fas fa-check"></i>
+                        </button>
                     </div>
                 </div>
 
-                 <!-- AI Viva Chat Area -->
-                 <!-- Keep history-section class but ensure it's initially hidden if not active -->
-                <div id="ai-viva-chat" class="history-section chat-section" style="display: none;"> 
+                <!-- AI Viva Chat Area -->
+                <div id="ai-viva-chat" class="history-section chat-section">
                     <div class="viva-header">
-                        <h2>AI Professor Session</h2> 
+                        <h2>AI Tutor Session</h2>
                         <div id="viva-timer-display" class="timer-display">Time: 07:00</div>
                     </div>
                     <div class="chat-window">
                         <div class="chat-messages" id="chat-messages">
-                            <!-- AI and Student messages will appear here -->
-                             <div class="message ai">Welcome to the AI Viva! I will ask questions based on your case entry.</div>
+                            <div class="message ai">Welcome to the AI Viva! I will ask questions based on your case entry.</div>
                         </div>
                         <div class="chat-input-area">
                             <textarea id="chat-input" placeholder="Type your response here..." rows="3"></textarea>
-                            <button id="send-chat-message" class="btn primary"><i class="fas fa-paper-plane"></i> Send</button>
+                            <button id="send-chat-message" class="btn primary">Send</button>
                         </div>
                         <div id="viva-controls">
-                             <button id="end-ai-viva" class="btn secondary"><i class="fas fa-stop-circle"></i> End Viva</button>
-                             <!-- Prompt for continuing viva -->
-                             <div id="viva-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
-                                 <p>Time's up! Would you like to continue for 5 more minutes?</p>
-                                 <button id="viva-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
-                                 <button id="viva-force-end-btn" class="btn secondary small-btn">End Now</button>
-                             </div>
+                            <button id="end-ai-viva" class="btn secondary">End Viva</button>
+                            <div id="viva-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
+                                <p>Time's up! Would you like to continue for 5 more minutes?</p>
+                                <button id="viva-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
+                                <button id="viva-force-end-btn" class="btn secondary small-btn">End Now</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-            </div> <!-- End content-area -->
+                <!-- Saved Cases Section -->
+                <div id="saved-cases-section" class="history-section" style="display: none;">
+                    <h2>Saved Cases</h2>
+                    <div id="saved-cases-list" class="saved-cases-container">
+                        <p class="no-cases-message">Login to view saved cases.</p>
+                    </div>
+                    <div id="saved-cases-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="view-case-summary" class="btn secondary small-btn" disabled>
+                            <i class="fas fa-eye"></i> View Summary
+                        </button>
+                        <button id="load-selected-case" class="btn primary small-btn" disabled>
+                            <i class="fas fa-edit"></i> Load in History
+                        </button>
+                        <button id="start-ai-with-case" class="btn ai-btn small-btn" disabled>
+                            <i class="fas fa-robot"></i> Start AI Tutor
+                        </button>
+                        <button id="delete-selected-case" class="btn danger small-btn" disabled>
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- X-rays Section -->
+                <div id="x-rays-section" class="history-section">
+                    <div class="coming-soon">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjhmOWZhIi8+CjxwYXRoIGQ9Ik0xMDAgNTBMMTE1IDc1SDEzMCAxMTVIMTcwVjE0MEgxMzBMMTE1IDEyNUgxMDBWNTBaIiBmaWxsPSIjNmM3NTdkIi8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOCIgZmlsbD0iIzY0YjVmNiIvPgo8Y2lyY2xlIGN4PSIxMzAiIGN5PSI4NSIgcj0iNSIgZmlsbD0iIzY0YjVmNiIvPgo8Y2lyY2xlIGN4PSIxNDAiIGN5PSIxMDAiIHI9IjQiIGZpbGw9IiM2NGI1ZjYiLz4KPHBhdGggZD0iTTkwIDgwSDEwMEw5MCA5MEgxMDBaIiBmaWxsPSIjNmM3NTdkIi8+CjxwYXRoIGQ9Ik05MCAxMTBIMTAwTDkwIDEyMEgxMDBaIiBmaWxsPSIjNmM3NTdkIi8+Cjwvc3ZnPgo=" alt="X-ray Coming Soon" style="width: 200px; height: 200px; margin-bottom: 2rem; opacity: 0.7;">
+                        <h2>X-ray Interpretation</h2>
+                        <p>Interactive X-ray interpretation practice coming soon. Learn to identify fractures, dislocations, and other radiological findings.</p>
+                        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                            <p style="margin: 0; font-size: 1.1rem; color: #fff;"><strong>Coming Soon!</strong></p>
+                            <p style="margin: 0.5rem 0 0 0; color: rgba(255,255,255,0.9);">This feature will include:</p>
+                            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: rgba(255,255,255,0.9);">
+                                <li>Interactive X-ray image gallery</li>
+                                <li>Fracture identification practice</li>
+                                <li>Case-based learning scenarios</li>
+                                <li>Progress tracking and quizzes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instruments Section -->
+                <div id="instruments-section" class="history-section">
+                    <div class="coming-soon">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjhmOWZhIi8+CjxwYXRoIGQ9Ik0xMDAgNDBMMTEwIDYwSDEyMCA4MEgxNDBMMTUwIDEwMEgxNjBMMTEwIDEyMEgxMDBWNDBaIiBmaWxsPSIjNmM3NTdkIi8+CjxjaXJjbGUgY3g9IjEwNSIgY3k9IjEwNSIgcj0iOCIgZmlsbD0iIzY0YjVmNiIvPgo8Y2lyY2xlIGN4PSIxMzAiIGN5PSI5NSIgcj0iNiIgZmlsbD0iIzY0YjVmNiIvPgo8cmVjdCB4PSI5NSIgeT0iMTEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMzAiIGZpbGw9IiM2NGI1ZjYiLz4KPHJlY3QgeD0iMTI1IiB5PSI4NSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjNjRiNWY2Ii8+CjxwYXRoIGQ9Ik05MCAxMzBIMTUwTDE0MCAxNDBIMTAwTDEwMCAxMzBIMTQwWiIgZmlsbD0iIzZjNzU3ZCIvPgo8L3N2Zz4K" alt="Surgical Instruments Coming Soon" style="width: 200px; height: 200px; margin-bottom: 2rem; opacity: 0.7;">
+                        <h2>Surgical Instruments</h2>
+                        <p>Interactive surgical instrument identification and usage guide coming soon. Master the tools of orthopedic surgery.</p>
+                        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                            <p style="margin: 0; font-size: 1.1rem; color: #fff;"><strong>Coming Soon!</strong></p>
+                            <p style="margin: 0.5rem 0 0 0; color: rgba(255,255,255,0.9);">This feature will include:</p>
+                            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: rgba(255,255,255,0.9);">
+                                <li>Interactive instrument gallery</li>
+                                <li>Usage and handling techniques</li>
+                                <li>Instrument identification quizzes</li>
+                                <li>Orthopedic surgery tool sets</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div id="help-section" class="history-section">
+                    <div class="coming-soon">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjhmOWZhIi8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIzMCIgZmlsbD0iIzY0YjVmNiIvPgo8cGF0aCBkPSJNODUgMTE1UTEwMCAxMzAgMTE1IDExNVExMzAgMTMwIDEzMCAxMTVUMTE1IDg1UTEwMCA4NSAxMDAgMTE1WiIgZmlsbD0iIzZjNzU3ZCIvPgo8cmVjdCB4PSI5NSIgeT0iMTQwIiB3aWR0aD0iMTAiIGhlaWdodD0iMjAiIGZpbGw9IiM2NGI1ZjYiLz4KPHRleHQgeD0iMTAwIiB5PSIxODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzU3ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Mj88L3RleHQ+Cjwvc3ZnPgo=" alt="Help & Support Coming Soon" style="width: 200px; height: 200px; margin-bottom: 2rem; opacity: 0.7;">
+                        <h2>Help & Support</h2>
+                        <p>Comprehensive help and support system coming soon. Get assistance with using the app effectively.</p>
+                        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                            <p style="margin: 0; font-size: 1.1rem; color: #fff;"><strong>Coming Soon!</strong></p>
+                            <p style="margin: 0.5rem 0 0 0; color: rgba(255,255,255,0.9);">This feature will include:</p>
+                            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: rgba(255,255,255,0.9);">
+                                <li>Interactive tutorials and guides</li>
+                                <li>FAQ and troubleshooting</li>
+                                <li>Video walkthroughs</li>
+                                <li>Contact support options</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Summary Modal -->
+                <div id="case-summary-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="modal-case-title">Case Summary</h2>
+                            <button class="close-btn" id="close-summary-modal">&times;</button>
+                        </div>
+                        <div class="modal-body" id="modal-case-content">
+                            <!-- Case content will be populated here -->
+                        </div>
+                        <div class="modal-footer">
+                            <button id="export-case-pdf" class="btn primary">
+                                <i class="fas fa-file-pdf"></i> Export as PDF
+                            </button>
+                            <button class="btn secondary" id="close-modal-btn">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </main>
 
-        <footer>
-            <div class="navigation-buttons">
-                <button id="prev-section" class="btn nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
-                <button id="next-section" class="btn nav-btn">Next <i class="fas fa-arrow-right"></i></button>
+        <!-- Mobile Navigation Footer -->
+        <footer class="mobile-nav-footer">
+            <div class="mobile-nav-container">
+                <button class="mobile-nav-btn" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="history-taking">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>History</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="old-cases">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Cases</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="ai-tutor">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Tutor</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="x-rays">
+                    <i class="fas fa-x-ray"></i>
+                    <span>X-rays</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="instruments">
+                    <i class="fas fa-tools"></i>
+                    <span>Instruments</span>
+                </button>
+                <button class="mobile-nav-btn" data-section="help">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </button>
             </div>
-            <p>OrthoHistory App - Designed for Medical Students</p>
         </footer>
     </div>
 
