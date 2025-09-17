@@ -66,159 +66,55 @@
 
         <!-- Authentication Forms -->
         <div id="auth-forms" style="display: none;">
-            <div class="auth-overlay" id="auth-overlay">
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <button class="close-auth-btn" id="close-auth-btn" aria-label="Close">&times;</button>
-                    </div>
-                    <div class="auth-form" id="login-form">
-                        <h2>Login</h2>
-                        <form>
-                            <div class="form-group">
-                                <label for="login-username">Username:</label>
-                                <input type="text" id="login-username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password">Password:</label>
-                                <input type="password" id="login-password" required>
-                            </div>
-                            <button type="submit" class="btn primary">Login</button>
-                        </form>
-                        <p><a href="#" id="show-register">Don't have an account? Sign up</a></p>
-                    </div>
-                    <div class="auth-form" id="register-form" style="display: none;">
-                        <h2>Sign Up</h2>
-                        <form>
-                            <div class="form-group">
-                                <label for="register-username">Username:</label>
-                                <input type="text" id="register-username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-password">Password:</label>
-                                <input type="password" id="register-password" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-email">Email (optional):</label>
-                                <input type="email" id="register-email">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-full-name">Full Name (optional):</label>
-                                <input type="text" id="register-full-name">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-study-year">Study Year (optional):</label>
-                                <input type="text" id="register-study-year">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-institute">Institute (optional):</label>
-                                <input type="text" id="register-institute">
-                            </div>
-
-                            <!-- Disclaimer Section -->
-                            <div class="disclaimer-section">
-                                <div class="disclaimer-text">
-                                    <h4>Important Disclaimer</h4>
-                                    <p>This application is under development and testing purpose only. It is intended solely for educational use by medical students as a digital alternative to handwritten history notes. This is not a clinical tool and must not be used for diagnosis, treatment, or patient care.</p>
-                                    <p>Please ensure that no identifiable patient information (such as original full names, addresses, phone numbers, or hospital IDs) is entered. Use only anonymized data for note-keeping. The developers accept no responsibility for clinical decisions based on the use of this application.</p>
-                                </div>
-
-                                <div class="terms-checkbox">
-                                    <input type="checkbox" id="accept-terms" required>
-                                    <label for="accept-terms">
-                                        I have read and agree to the <a href="#" id="terms-link">Terms and Conditions</a>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn primary">Sign Up</button>
-                        </form>
-                        <p><a href="#" id="show-login">Already have an account? Login</a></p>
-                    </div>
+            <div class="auth-container">
+                <div class="auth-form" id="login-form">
+                    <h2>Login</h2>
+                    <form>
+                        <div class="form-group">
+                            <label for="login-username">Username:</label>
+                            <input type="text" id="login-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password:</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn primary">Login</button>
+                    </form>
+                    <p><a href="#" id="show-register">Don't have an account? Sign up</a></p>
                 </div>
-            </div>
+                <div class="auth-form" id="register-form" style="display: none;">
+                    <h2>Sign Up</h2>
+                    <form>
+                        <div class="form-group">
+                            <label for="register-username">Username:</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password:</label>
+                            <input type="password" id="register-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email (optional):</label>
+                            <input type="email" id="register-email">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-full-name">Full Name (optional):</label>
+                            <input type="text" id="register-full-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-study-year">Study Year (optional):</label>
+                            <input type="text" id="register-study-year">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-institute">Institute (optional):</label>
+                            <input type="text" id="register-institute">
+                        </div>
+                        <button type="submit" class="btn primary">Sign Up</button>
+                    </form>
+                    <p><a href="#" id="show-login">Already have an account? Login</a></p>
+                </div>
             </div>
             <div id="auth-message" class="auth-message"></div>
-        </div>
-
-        <!-- Terms and Conditions Modal -->
-        <div id="terms-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Terms and Conditions</h2>
-                    <button class="close-btn" id="close-terms-modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <h3>1. Purpose and Scope</h3>
-                    <p>This application (MedHistoryApp) is designed exclusively for educational purposes. It serves as a digital tool for medical students to practice and organize clinical history taking skills.</p>
-
-                    <h3>2. Educational Use Only</h3>
-                    <p>This application is NOT a clinical decision support tool and must NOT be used for:</p>
-                    <ul>
-                        <li>Patient diagnosis or treatment decisions</li>
-                        <li>Clinical documentation in healthcare settings</li>
-                        <li>Any form of patient care or medical practice</li>
-                    </ul>
-
-                    <h3>3. Data Privacy and Security</h3>
-                    <p>By using this application, you agree to:</p>
-                    <ul>
-                        <li>Use only anonymized patient data for educational purposes</li>
-                        <li>Not enter any identifiable patient information including:
-                            <ul>
-                                <li>Full names</li>
-                                <li>Addresses</li>
-                                <li>Phone numbers</li>
-                                <li>Hospital IDs</li>
-                                <li>Date of birth (use age instead)</li>
-                            </ul>
-                        </li>
-                        <li>Ensure compliance with all applicable privacy laws and regulations</li>
-                    </ul>
-
-                    <h3>4. User Responsibilities</h3>
-                    <p>As a user of this application, you are responsible for:</p>
-                    <ul>
-                        <li>Using the application only for its intended educational purpose</li>
-                        <li>Maintaining the confidentiality of any data entered</li>
-                        <li>Ensuring that your use complies with your institution's policies</li>
-                        <li>Reporting any technical issues or security concerns</li>
-                    </ul>
-
-                    <h3>5. Limitation of Liability</h3>
-                    <p>The developers and maintainers of this application:</p>
-                    <ul>
-                        <li>Accept no responsibility for clinical decisions made based on information from this app</li>
-                        <li>Are not liable for any damages arising from the use or misuse of this application</li>
-                        <li>Provide this application "as is" without warranties of any kind</li>
-                    </ul>
-
-                    <h3>6. Account and Data Management</h3>
-                    <p>By creating an account:</p>
-                    <ul>
-                        <li>You are responsible for maintaining the security of your account credentials</li>
-                        <li>You acknowledge that case data may be stored temporarily for educational purposes</li>
-                        <li>You may request deletion of your account and associated data at any time</li>
-                    </ul>
-
-                    <h3>7. Updates and Changes</h3>
-                    <p>The developers reserve the right to:</p>
-                    <ul>
-                        <li>Modify these terms and conditions at any time</li>
-                        <li>Update or discontinue the application</li>
-                        <li>Change features or functionality</li>
-                    </ul>
-
-                    <h3>8. Contact Information</h3>
-                    <p>If you have questions about these terms or the application, please contact the development team.</p>
-
-                    <h3>9. Acknowledgment</h3>
-                    <p>By checking the agreement box and creating an account, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions.</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn primary" id="accept-terms-btn">I Accept</button>
-                    <button class="btn secondary" id="decline-terms-btn">Decline</button>
-                </div>
-            </div>
         </div>
 
         <main>

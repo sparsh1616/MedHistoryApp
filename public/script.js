@@ -22,18 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileLogout = document.getElementById('global-profile-logout');
     const profileName = document.getElementById('global-profile-name');
 
-    // Terms and Conditions elements
-    const termsLink = document.getElementById('terms-link');
-    const termsModal = document.getElementById('terms-modal');
-    const closeTermsModal = document.getElementById('close-terms-modal');
-    const acceptTermsBtn = document.getElementById('accept-terms-btn');
-    const declineTermsBtn = document.getElementById('decline-terms-btn');
-    const acceptTermsCheckbox = document.getElementById('accept-terms');
-
-    // Auth modal elements
-    const authOverlay = document.getElementById('auth-overlay');
-    const closeAuthBtn = document.getElementById('close-auth-btn');
-
 
     // --- State Variables ---
     let activeHintPopup = null;
@@ -670,96 +658,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('global-show-login')?.addEventListener('click', () => {
             toggleAuthForms(true);
             const authFormsDiv = document.getElementById('auth-forms');
-            if (authFormsDiv) {
-                authFormsDiv.style.display = 'flex';
-                authFormsDiv.classList.add('flex');
-            }
+            if (authFormsDiv) authFormsDiv.style.display = 'block';
         });
         document.getElementById('global-show-register')?.addEventListener('click', () => {
             toggleAuthForms(false);
             const authFormsDiv = document.getElementById('auth-forms');
-            if (authFormsDiv) {
-                authFormsDiv.style.display = 'flex';
-                authFormsDiv.classList.add('flex');
-            }
-        });
-
-        // Terms and Conditions modal functionality
-        if (termsLink) {
-            termsLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (termsModal) termsModal.style.display = 'flex';
-            });
-        }
-
-        if (closeTermsModal) {
-            closeTermsModal.addEventListener('click', () => {
-                if (termsModal) termsModal.style.display = 'none';
-            });
-        }
-
-        if (acceptTermsBtn) {
-            acceptTermsBtn.addEventListener('click', () => {
-                if (acceptTermsCheckbox) acceptTermsCheckbox.checked = true;
-                if (termsModal) termsModal.style.display = 'none';
-                showNotification('Terms and conditions accepted.', 'success');
-            });
-        }
-
-        if (declineTermsBtn) {
-            declineTermsBtn.addEventListener('click', () => {
-                if (acceptTermsCheckbox) acceptTermsCheckbox.checked = false;
-                if (termsModal) termsModal.style.display = 'none';
-                showNotification('You must accept the terms and conditions to register.', 'warning');
-            });
-        }
-
-        // Close terms modal when clicking outside
-        if (termsModal) {
-            termsModal.addEventListener('click', (e) => {
-                if (e.target === termsModal) {
-                    termsModal.style.display = 'none';
-                }
-            });
-        }
-
-        // Auth modal close functionality
-        if (closeAuthBtn) {
-            closeAuthBtn.addEventListener('click', () => {
-                const authFormsDiv = document.getElementById('auth-forms');
-                if (authFormsDiv) {
-                    authFormsDiv.style.display = 'none';
-                    authFormsDiv.classList.remove('flex');
-                }
-            });
-        }
-
-        // Close auth modal when clicking on overlay
-        if (authOverlay) {
-            authOverlay.addEventListener('click', (e) => {
-                if (e.target === authOverlay) {
-                    const authFormsDiv = document.getElementById('auth-forms');
-                    if (authFormsDiv) {
-                        authFormsDiv.style.display = 'none';
-                        authFormsDiv.classList.remove('flex');
-                    }
-                }
-            });
-        }
-
-        // Prevent form submission from closing modal on Enter key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const authFormsDiv = document.getElementById('auth-forms');
-                const termsModal = document.getElementById('terms-modal');
-                if (authFormsDiv && authFormsDiv.style.display === 'flex') {
-                    authFormsDiv.style.display = 'none';
-                    authFormsDiv.classList.remove('flex');
-                }
-                if (termsModal && termsModal.style.display === 'flex') {
-                    termsModal.style.display = 'none';
-                }
-            }
+            if (authFormsDiv) authFormsDiv.style.display = 'block';
         });
 
         // Add listener for Enter key in chat input
@@ -927,23 +831,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return;
         }
-
-        // Validate terms acceptance
-        if (!acceptTermsCheckbox || !acceptTermsCheckbox.checked) {
-            if (authMessage) {
-                authMessage.textContent = 'Please read and accept the terms and conditions to register.';
-                authMessage.classList.add('error');
-            }
-            return;
-        }
-
         // Add username length check
         if (username.length < 6) {
-              if (authMessage) {
-                  authMessage.textContent = 'Username must be at least 6 characters long.';
-                  authMessage.classList.add('error');
-              }
-              return;
+             if (authMessage) {
+                 authMessage.textContent = 'Username must be at least 6 characters long.';
+                 authMessage.classList.add('error');
+             }
+             return;
         }
         if (password.length < 6) {
             if (authMessage) {

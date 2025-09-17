@@ -1,4 +1,5 @@
 services:
+  # MedHistoryApp Web Service
   - type: web
     name: medhistoryapp
     runtime: node
@@ -7,11 +8,26 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        fromSecret: database_url
       - key: JWT_SECRET
-        fromSecret: jwt_secret
+        generateValue: true
       - key: GROQ_API_KEY
-        fromSecret: groq_api_key
-      - key: PORT
-        value: 10000
+        sync: false # You'll need to set this manually in Render dashboard
+    healthCheckPath: /
+    plan: starter
+
+  # PostgreSQL Database
+  - type: pserv
+    name: medhistoryapp-db
+    runtime: postgresql
+    plan: starter
+    ipAllowList: [] # Only accessible by the web service
+
+# Environment groups for shared configuration
+envVarGroups:
+  - name: shared
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: medhistoryapp-db
+          property: connectionString

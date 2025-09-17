@@ -698,18 +698,7 @@ footer p {
 }
 
 .dashboard-section.active {
-    display: block !important;
-}
-
-/* Ensure dashboard is visible by default */
-#dashboard {
-    display: block !important;
-}
-
-/* Ensure dashboard content is properly positioned */
-.dashboard-section.active {
-    display: block !important;
-    padding-top: 20px;
+    display: block;
 }
 
 .dashboard-header {
@@ -1247,22 +1236,10 @@ footer p {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    height: auto;
-    min-height: 60px;
 }
 
 .app-container {
     padding-top: 80px; /* Account for fixed header */
-    min-height: 100vh;
-}
-
-main {
-    margin-top: 0;
-    padding-top: 20px;
-}
-
-.content-area {
-    padding-top: 20px;
 }
 
 /* Global Navigation Dropdown */
@@ -1420,7 +1397,6 @@ main {
     border-top: 1px solid #dee2e6;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
-    padding: 8px 0;
 }
 
 .mobile-nav-container {
@@ -1428,7 +1404,6 @@ main {
     justify-content: space-around;
     align-items: center;
     padding: 0.5rem;
-    max-width: 100%;
 }
 
 .mobile-nav-btn {
@@ -1586,26 +1561,11 @@ main {
     }
 
     .mobile-nav-footer {
-        display: block !important;
+        display: block;
     }
 
     .app-container {
         padding-bottom: 80px; /* Account for fixed footer */
-    }
-
-    .content-area {
-        padding-bottom: 100px; /* Extra space for mobile footer */
-    }
-
-    /* Ensure main content is visible */
-    main {
-        margin-top: 0;
-        padding-top: 20px;
-    }
-
-    /* Make sure dashboard content is visible */
-    .dashboard-section.active {
-        display: block !important;
     }
 }
 
@@ -1701,163 +1661,4 @@ main {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
-}
-
-/* Auth Overlay Styles */
-#auth-forms {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-#auth-forms.flex {
-    display: flex;
-}
-
-.auth-container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    max-width: 500px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.auth-header {
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px 20px 0;
-}
-
-.close-auth-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.close-auth-btn:hover {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-/* Disclaimer Section Styles */
-.disclaimer-section {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 8px;
-}
-
-.disclaimer-text {
-    margin-bottom: 1rem;
-}
-
-.disclaimer-text h4 {
-    color: #856404;
-    margin-bottom: 0.75rem;
-    font-size: 1rem;
-}
-
-.disclaimer-text p {
-    color: #856404;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-bottom: 0.75rem;
-}
-
-.terms-checkbox {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    border: 1px solid #dee2e6;
-}
-
-.terms-checkbox input[type="checkbox"] {
-    margin-top: 0.2rem;
-    width: auto;
-    flex-shrink: 0;
-}
-
-.terms-checkbox label {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    margin-bottom: 0;
-    cursor: pointer;
-}
-
-.terms-checkbox a {
-    color: var(--primary-color);
-    text-decoration: underline;
-}
-
-.terms-checkbox a:hover {
-    text-decoration: none;
-}
-
-/* Terms Modal Styles */
-#terms-modal .modal-content {
-    max-width: 800px;
-    max-height: 80vh;
-}
-
-#terms-modal .modal-body {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1.5rem;
-}
-
-#terms-modal h3 {
-    color: var(--primary-color);
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    font-size: 1.1rem;
-}
-
-#terms-modal h3:first-child {
-    margin-top: 0;
-}
-
-#terms-modal p {
-    margin-bottom: 0.75rem;
-    line-height: 1.6;
-}
-
-#terms-modal ul {
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-}
-
-#terms-modal li {
-    margin-bottom: 0.25rem;
-    line-height: 1.5;
-}
-
-#terms-modal ul ul {
-    margin-top: 0.25rem;
-    margin-bottom: 0.5rem;
 }

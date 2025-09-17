@@ -453,6 +453,15 @@ app.post('/api/viva/chat', async (req, res) => {
 });
 
 
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // --- Frontend Route --- (Keep this last as a catch-all for the frontend app)
 // Serve index.html for any route not handled by API or static files
 // This allows client-side routing or direct access to app sections via URL
