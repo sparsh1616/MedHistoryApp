@@ -19,7 +19,7 @@
                         <i class="fas fa-home"></i> Home
                     </button>
                     <button class="nav-btn desktop-nav" data-section="history-taking">
-                        <i class="fas fa-clipboard-list"></i> History
+                        <i class="fas fa-clipboard-list"></i> Clinical History
                     </button>
                     <button class="nav-btn desktop-nav" data-section="old-cases">
                         <i class="fas fa-folder-open"></i> Cases
@@ -72,11 +72,11 @@
                     <form>
                         <div class="form-group">
                             <label for="login-username">Username:</label>
-                            <input type="text" id="login-username" required>
+                            <input type="text" id="login-username" required autocomplete="username" inputmode="text">
                         </div>
                         <div class="form-group">
                             <label for="login-password">Password:</label>
-                            <input type="password" id="login-password" required>
+                            <input type="password" id="login-password" required autocomplete="current-password" inputmode="text">
                         </div>
                         <button type="submit" class="btn primary">Login</button>
                     </form>
@@ -87,27 +87,27 @@
                     <form>
                         <div class="form-group">
                             <label for="register-username">Username:</label>
-                            <input type="text" id="register-username" required>
+                            <input type="text" id="register-username" required autocomplete="username" inputmode="text">
                         </div>
                         <div class="form-group">
                             <label for="register-password">Password:</label>
-                            <input type="password" id="register-password" required>
+                            <input type="password" id="register-password" required autocomplete="new-password" inputmode="text">
                         </div>
                         <div class="form-group">
                             <label for="register-email">Email (optional):</label>
-                            <input type="email" id="register-email">
+                            <input type="email" id="register-email" autocomplete="email" inputmode="email">
                         </div>
                         <div class="form-group">
                             <label for="register-full-name">Full Name (optional):</label>
-                            <input type="text" id="register-full-name">
+                            <input type="text" id="register-full-name" autocomplete="name" inputmode="text">
                         </div>
                         <div class="form-group">
                             <label for="register-study-year">Study Year (optional):</label>
-                            <input type="text" id="register-study-year">
+                            <input type="text" id="register-study-year" autocomplete="off" inputmode="text" placeholder="e.g., MBBS Year 3">
                         </div>
                         <div class="form-group">
                             <label for="register-institute">Institute (optional):</label>
-                            <input type="text" id="register-institute">
+                            <input type="text" id="register-institute" autocomplete="organization" inputmode="text">
                         </div>
                         <button type="submit" class="btn primary">Sign Up</button>
                     </form>
@@ -185,12 +185,39 @@
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle sidebar menu">
                     <i class="fas fa-bars"></i>
                 </button>
+
                 <!-- Dashboard Home -->
                 <div id="dashboard" class="dashboard-section active">
                     <div class="dashboard-header">
                         <div class="header-content">
                             <div class="header-left">
                                 <h2>Welcome to MedHistoryApp</h2>
+                                <div class="nav-dropdown">
+                                    <button class="home-btn" id="dashboard-home-btn" aria-label="Navigation menu">
+                                        <i class="fas fa-home"></i>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="nav-dropdown-menu" id="dashboard-nav-dropdown-menu">
+                                        <a href="#" data-section="dashboard">
+                                            <i class="fas fa-home"></i> Home
+                                        </a>
+                                        <a href="#" data-section="history-taking">
+                                            <i class="fas fa-clipboard-list"></i> Clinical History Taking
+                                        </a>
+                                        <a href="#" data-section="old-cases">
+                                            <i class="fas fa-folder-open"></i> Old Cases
+                                        </a>
+                                        <a href="#" data-section="ai-tutor">
+                                            <i class="fas fa-robot"></i> AI Tutor
+                                        </a>
+                                        <a href="#" data-section="x-rays">
+                                            <i class="fas fa-x-ray"></i> X-rays
+                                        </a>
+                                        <a href="#" data-section="instruments">
+                                            <i class="fas fa-tools"></i> Instruments
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -200,9 +227,8 @@
                             <div class="card-icon">
                                 <i class="fas fa-clipboard-list"></i>
                             </div>
-                            <h3>Clinical History Taking</h3>
-                            <p>Practice taking patient histories with structured templates</p>
-                            <button class="btn primary card-btn">Start Practice</button>
+                            <h3>Clinical History</h3>
+                            <button class="btn primary card-btn">Start</button>
                         </div>
 
                         <div class="dashboard-card" data-section="old-cases">
@@ -210,8 +236,7 @@
                                 <i class="fas fa-folder-open"></i>
                             </div>
                             <h3>Old Cases</h3>
-                            <p>Review and learn from previously saved cases</p>
-                            <button class="btn primary card-btn">View Cases</button>
+                            <button class="btn primary card-btn">View</button>
                         </div>
 
                         <div class="dashboard-card" data-section="ai-tutor">
@@ -219,8 +244,7 @@
                                 <i class="fas fa-robot"></i>
                             </div>
                             <h3>AI Tutor</h3>
-                            <p>Get instant feedback and guidance on your cases</p>
-                            <button class="btn primary card-btn">Start Session</button>
+                            <button class="btn primary card-btn">Start</button>
                         </div>
 
                         <div class="dashboard-card" data-section="x-rays">
@@ -228,25 +252,22 @@
                                 <i class="fas fa-x-ray"></i>
                             </div>
                             <h3>X-rays</h3>
-                            <p>Learn to interpret radiological images</p>
-                            <button class="btn secondary card-btn">Coming Soon</button>
+                            <button class="btn secondary card-btn">Soon</button>
                         </div>
 
                         <div class="dashboard-card" data-section="instruments">
                             <div class="card-icon">
                                 <i class="fas fa-tools"></i>
                             </div>
-                            <h3>Surgical Instruments</h3>
-                            <p>Identify and learn about surgical instruments</p>
-                            <button class="btn secondary card-btn">Coming Soon</button>
+                            <h3>Instruments</h3>
+                            <button class="btn secondary card-btn">Soon</button>
                         </div>
 
                         <div class="dashboard-card" data-section="help">
                             <div class="card-icon">
                                 <i class="fas fa-question-circle"></i>
                             </div>
-                            <h3>Help & Support</h3>
-                            <p>Get help and support for using the app</p>
+                            <h3>Help</h3>
                             <button class="btn primary card-btn">Get Help</button>
                         </div>
                     </div>
@@ -254,18 +275,23 @@
 
                 <!-- Patient Demographics -->
                 <div id="patient-info" class="history-section">
-                    <h2>Patient Demographics</h2>
+
+
+                    <div class="form-step-header">
+                        <h2>Patient Demographics</h2>
+                        <p class="form-step-description">Start by gathering basic patient information. This forms the foundation of your medical history.</p>
+                    </div>
                     <div class="form-group">
                         <label for="patient-name">Patient Name:</label>
-                        <input type="text" id="patient-name" placeholder="Enter patient name">
+                        <input type="text" id="patient-name" placeholder="Enter patient name" autocomplete="name" inputmode="text">
                     </div>
                     <div class="form-group">
                         <label for="patient-age">Age:</label>
-                        <input type="number" id="patient-age" placeholder="Years">
+                        <input type="number" id="patient-age" placeholder="Years" min="0" max="150" inputmode="numeric" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="patient-gender">Gender:</label>
-                        <select id="patient-gender">
+                        <select id="patient-gender" autocomplete="sex">
                             <option value="">Select</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
@@ -274,7 +300,7 @@
                     </div>
                     <div class="form-group">
                         <label for="patient-occupation">Occupation:</label>
-                        <input type="text" id="patient-occupation" placeholder="Enter occupation">
+                        <input type="text" id="patient-occupation" placeholder="Enter occupation" autocomplete="organization-title" inputmode="text">
                     </div>
                     <div class="form-group">
                         <label for="patient-handedness">Handedness:</label>
@@ -287,14 +313,72 @@
                     </div>
                     <div class="form-group">
                         <label for="patient-address">Address:</label>
-                        <textarea id="patient-address" placeholder="Enter patient address" rows="3"></textarea>
+                        <textarea id="patient-address" placeholder="Enter patient address" rows="3" autocomplete="street-address" inputmode="text"></textarea>
                     </div>
-                    <div class="section-navigation">
-                        <button class="btn nav-btn prev-btn" data-section="patient-info">
+
+                    <!-- Advanced Fields Toggle -->
+                    <div class="advanced-fields-toggle">
+                        <button type="button" class="btn secondary small-btn" id="toggle-advanced-fields">
+                            <i class="fas fa-chevron-down"></i>
+                            <span>Show Advanced Fields</span>
+                        </button>
+                    </div>
+
+                    <!-- Advanced Fields (Hidden by default) -->
+                    <div class="advanced-fields" id="advanced-fields" style="display: none;">
+                        <div class="advanced-fields-header">
+                            <h4>Advanced Patient Information</h4>
+                            <p class="field-description">Optional fields for comprehensive patient profiling</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-phone">Phone Number:</label>
+                            <input type="tel" id="patient-phone" placeholder="Enter phone number" autocomplete="tel" inputmode="tel">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-email">Email:</label>
+                            <input type="email" id="patient-email" placeholder="Enter email address" autocomplete="email" inputmode="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-emergency-contact">Emergency Contact:</label>
+                            <input type="text" id="patient-emergency-contact" placeholder="Name and relationship" autocomplete="name" inputmode="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-emergency-phone">Emergency Contact Phone:</label>
+                            <input type="tel" id="patient-emergency-phone" placeholder="Emergency contact phone" autocomplete="tel" inputmode="tel">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-insurance">Insurance Provider:</label>
+                            <input type="text" id="patient-insurance" placeholder="Insurance company name" autocomplete="organization" inputmode="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-insurance-id">Insurance ID:</label>
+                            <input type="text" id="patient-insurance-id" placeholder="Insurance policy number" autocomplete="off" inputmode="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-referring-doctor">Referring Doctor:</label>
+                            <input type="text" id="patient-referring-doctor" placeholder="Name of referring physician" autocomplete="name" inputmode="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-previous-hospitalizations">Previous Hospitalizations:</label>
+                            <textarea id="patient-previous-hospitalizations" placeholder="List any previous hospital admissions..." rows="3" inputmode="text"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step Navigation -->
+                    <div class="step-navigation">
+                        <button class="step-nav-btn secondary" disabled>
                             <i class="fas fa-arrow-left"></i> Previous
                         </button>
-                        <button class="btn nav-btn next-btn" data-section="chief-complaint">
-                            Next <i class="fas fa-arrow-right"></i>
+                        <button class="step-nav-btn primary" data-section="chief-complaint">
+                            Next: Chief Complaint <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
@@ -496,26 +580,92 @@
                     </div>
                 </div>
 
-                <!-- AI Viva Chat Area -->
-                <div id="ai-viva-chat" class="history-section chat-section">
-                    <div class="viva-header">
-                        <h2>AI Tutor Session</h2>
-                        <div id="viva-timer-display" class="timer-display">Time: 07:00</div>
+                <!-- AI Tutor Section -->
+                <div id="ai-tutor" class="history-section">
+                    <div class="ai-tutor-header">
+                        <h2>AI Tutor</h2>
+                        <p>Get instant feedback and guidance on your cases</p>
                     </div>
-                    <div class="chat-window">
-                        <div class="chat-messages" id="chat-messages">
-                            <div class="message ai">Welcome to the AI Viva! I will ask questions based on your case entry.</div>
+
+                    <!-- Mode Selection -->
+                    <div class="ai-mode-selection">
+                        <h3>Select AI Session Mode:</h3>
+                        <div class="mode-buttons">
+                            <button class="btn primary mode-btn" id="start-exam-mode">
+                                <i class="fas fa-graduation-cap"></i> Exam Mode
+                            </button>
+                            <button class="btn primary mode-btn" id="start-learning-mode">
+                                <i class="fas fa-book-open"></i> Learning Mode
+                            </button>
+                            <button class="btn primary mode-btn" id="start-dummy-mode">
+                                <i class="fas fa-magic"></i> Dummy Case Mode
+                            </button>
                         </div>
-                        <div class="chat-input-area">
-                            <textarea id="chat-input" placeholder="Type your response here..." rows="3"></textarea>
-                            <button id="send-chat-message" class="btn primary">Send</button>
+                    </div>
+
+                    <!-- Chat Interface (Hidden initially) -->
+                    <div id="ai-chat-interface" class="ai-chat-interface" style="display: none;">
+                        <div class="chat-header">
+                            <h3 id="chat-mode-title">AI Tutor Session</h3>
+                            <div id="chat-timer-display" class="timer-display">Time: 07:00</div>
                         </div>
-                        <div id="viva-controls">
-                            <button id="end-ai-viva" class="btn secondary">End Viva</button>
-                            <div id="viva-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
+                        <div class="chat-window">
+                            <div class="chat-messages" id="ai-chat-messages">
+                                <div class="message ai">Welcome to the AI Tutor! Select a mode above to begin your session.</div>
+                            </div>
+                            <div class="chat-input-area">
+                                <textarea id="ai-chat-input" placeholder="Type your response here..." rows="3" disabled></textarea>
+                                <button id="ai-send-message" class="btn primary" disabled>Send</button>
+                            </div>
+                        </div>
+                        <div id="ai-chat-controls">
+                            <button id="end-ai-session" class="btn secondary">End Session</button>
+                            <button id="back-to-modes" class="btn secondary">Back to Modes</button>
+                            <div id="ai-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
                                 <p>Time's up! Would you like to continue for 5 more minutes?</p>
-                                <button id="viva-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
-                                <button id="viva-force-end-btn" class="btn secondary small-btn">End Now</button>
+                                <button id="ai-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
+                                <button id="ai-force-end-btn" class="btn secondary small-btn">End Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Case Selection Modal for Exam Mode -->
+                    <div id="case-selection-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Select a Case for Exam Mode</h3>
+                                <button class="close-btn" id="close-case-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="case-option">
+                                    <button class="btn primary" id="use-current-case">Use Current Case</button>
+                                    <p>Use the case you're currently working on in the Clinical History section</p>
+                                </div>
+                                <div class="case-option">
+                                    <button class="btn secondary" id="load-saved-case">Load Saved Case</button>
+                                    <p>Select from your previously saved cases</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Selection Popup -->
+                    <div id="mode-popup" class="mode-popup" style="display: none;">
+                        <div class="mode-popup-content">
+                            <div class="mode-popup-header">
+                                <h3 id="mode-popup-title">Exam Mode</h3>
+                                <button class="close-btn" id="close-mode-popup">&times;</button>
+                            </div>
+                            <div class="mode-popup-body">
+                                <p id="mode-popup-message">To start Exam Mode, you need a case. Choose an option below:</p>
+                                <div class="mode-popup-options">
+                                    <button class="btn primary" id="popup-go-to-history">
+                                        <i class="fas fa-clipboard-list"></i> Go to Clinical History
+                                    </button>
+                                    <button class="btn secondary" id="popup-load-case">
+                                        <i class="fas fa-folder-open"></i> Load Saved Case
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -631,7 +781,7 @@
                 </button>
                 <button class="mobile-nav-btn" data-section="history-taking">
                     <i class="fas fa-clipboard-list"></i>
-                    <span>History</span>
+                    <span>Clinical History</span>
                 </button>
                 <button class="mobile-nav-btn" data-section="old-cases">
                     <i class="fas fa-folder-open"></i>

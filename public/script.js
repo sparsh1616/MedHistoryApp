@@ -71,6 +71,43 @@ document.addEventListener('DOMContentLoaded', function() {
         summary_plan_hint: `Initial Plan: Outline immediate next steps. Investigations (e.g., X-ray [views], Blood tests [FBC, ESR/CRP]) and/or basic Management (e.g., RICE, analgesia, splinting, referral).\nExample: "1. X-ray Right Shoulder (AP, Axillary views). 2. Sling for comfort. 3. NSAIDs for pain. 4. Follow-up after imaging."`
     }; // <-- Corrected closing brace
 
+    // --- Progressive Disclosure Setup ---
+    function setupProgressiveDisclosure() {
+        const toggleBtn = document.getElementById('toggle-advanced-fields');
+        const advancedFields = document.getElementById('advanced-fields');
+        const toggleIcon = toggleBtn?.querySelector('i');
+        const toggleText = toggleBtn?.querySelector('span');
+
+        if (!toggleBtn || !advancedFields) {
+            console.log("DEBUG: Progressive disclosure elements not found");
+            return;
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            const isExpanded = advancedFields.style.display !== 'none';
+
+            if (isExpanded) {
+                // Hide advanced fields
+                advancedFields.classList.add('collapsing');
+                setTimeout(() => {
+                    advancedFields.style.display = 'none';
+                    advancedFields.classList.remove('collapsing');
+                    toggleBtn.classList.remove('expanded');
+                    toggleText.textContent = 'Show Advanced Fields';
+                }, 300); // Match animation duration
+            } else {
+                // Show advanced fields
+                advancedFields.style.display = 'block';
+                toggleBtn.classList.add('expanded');
+                toggleText.textContent = 'Hide Advanced Fields';
+            }
+
+            console.log(`DEBUG: Advanced fields ${isExpanded ? 'collapsed' : 'expanded'}`);
+        });
+
+        console.log("DEBUG: Progressive disclosure setup complete.");
+    }
+
     // --- Initialization ---
     initApp(); // Ensure initApp is called after DOMContentLoaded and definitions
 
@@ -82,12 +119,15 @@ document.addEventListener('DOMContentLoaded', function() {
             setupHints(); // Call hint setup directly
             setupAuth(); // Setup authentication listeners and initial state
             setupMobileToggle(); // Setup mobile sidebar toggle
+            setupProgressiveDisclosure(); // Setup progressive disclosure for advanced fields
+            setupAITutor(); // Setup AI Tutor functionality
             // loadSavedData(); // Remove initial load from localStorage
             ensureInitialEntries(); // Ensure at least one med/allergy entry exists visually
             updateVivaButtonState(); // Restore Viva button state check (might depend on login now)
 
             // Start with dashboard visible (home page)
             navigateToDashboardSection('dashboard');
+            updateMobileNavActive('dashboard');
 
             console.log("DEBUG: App Initialized Successfully."); // Updated log message
         } catch (error) {
@@ -109,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 section.style.display = section.id === 'patient-info' ? 'block' : 'none';
             });
             updateActiveNav(document.querySelector('[data-section="patient-info"]'));
+            updateBreadcrumbNav('patient-info');
 
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
@@ -116,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log(`DEBUG: Nav item clicked: ${sectionId}`);
                     showSection(sectionId);
                     updateActiveNav(item);
+                    updateBreadcrumbNav(sectionId);
                     // Close sidebar on mobile after selection
                     if (window.innerWidth <= 768) {
                         toggleSidebar(false);
@@ -125,6 +167,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Section-specific navigation buttons are now used instead of footer buttons
         }
+
+        // Setup breadcrumb navigation
+        setupBreadcrumbNavigation();
 
         // Setup dashboard navigation (new)
         setupDashboardNavigation();
@@ -143,6 +188,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Handle dashboard toggle button (removed as per user request)
         // Dashboard is now always accessible via home button
+
+        // Handle dashboard home button dropdown
+        const dashboardHomeBtn = document.getElementById('dashboard-home-btn');
+        const dashboardNavDropdownMenu = document.getElementById('dashboard-nav-dropdown-menu');
+
+        if (dashboardHomeBtn && dashboardNavDropdownMenu) {
+            // Toggle dropdown on button click
+            dashboardHomeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dashboardNavDropdownMenu.classList.toggle('active');
+            });
+
+            // Handle dropdown menu item clicks
+            const dashboardDropdownItems = dashboardNavDropdownMenu.querySelectorAll('a');
+            dashboardDropdownItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = item.getAttribute('data-section');
+                    navigateToDashboardSection(sectionId);
+                    dashboardNavDropdownMenu.classList.remove('active'); // Close dropdown
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dashboardHomeBtn.contains(e.target) && !dashboardNavDropdownMenu.contains(e.target)) {
+                    dashboardNavDropdownMenu.classList.remove('active');
+                }
+            });
+        }
 
         // Handle dashboard card clicks
         dashboardCards.forEach(card => {
@@ -193,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sectionId = button.getAttribute('data-section');
                 console.log(`DEBUG: Mobile nav button clicked: ${sectionId}`);
                 navigateToDashboardSection(sectionId);
+                updateMobileNavActive(sectionId);
             });
         });
 
@@ -200,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function setupSectionNavigation() {
             const prevButtons = document.querySelectorAll('.prev-btn');
             const nextButtons = document.querySelectorAll('.next-btn');
+            const stepNavButtons = document.querySelectorAll('.step-nav-btn');
 
             prevButtons.forEach(button => {
                 button.addEventListener('click', () => {
@@ -207,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (targetSection) {
                         showSection(targetSection);
                         updateActiveNav(document.querySelector(`[data-section="${targetSection}"]`));
+                        updateBreadcrumbNav(targetSection);
                     }
                 });
             });
@@ -217,6 +295,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (targetSection) {
                         showSection(targetSection);
                         updateActiveNav(document.querySelector(`[data-section="${targetSection}"]`));
+                        updateBreadcrumbNav(targetSection);
+                    }
+                });
+            });
+
+            // Handle step navigation buttons
+            stepNavButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetSection = button.getAttribute('data-section');
+                    if (targetSection && !button.disabled) {
+                        showSection(targetSection);
+                        updateActiveNav(document.querySelector(`[data-section="${targetSection}"]`));
+                        updateBreadcrumbNav(targetSection);
+                        // Close sidebar on mobile after selection
+                        if (window.innerWidth <= 768) {
+                            toggleSidebar(false);
+                        }
                     }
                 });
             });
@@ -234,6 +329,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (activeNavBtn) {
             activeNavBtn.classList.add('active');
         }
+
+        // Update mobile navigation active state
+        updateMobileNavActive(sectionId);
 
         // Hide all sections first
         const allSections = document.querySelectorAll('.dashboard-section, .history-section');
@@ -283,9 +381,13 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Old Cases loaded.', 'info');
 
         } else if (sectionId === 'ai-tutor') {
-            // Show AI tutor section
-            showSection('ai-viva-chat');
-            updateActiveNav(document.querySelector('[data-section="ai-viva-chat"]'));
+            // Show AI tutor section and hide sidebar
+            const sidebar = document.getElementById('main-sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'none';
+            }
+            showSectionWithoutSidebar('ai-tutor');
+            updateActiveNav(document.querySelector('[data-section="ai-tutor"]'));
             showNotification('AI Tutor loaded. Select a mode and start your session.', 'info');
 
         } else if (sectionId === 'x-rays') {
@@ -327,9 +429,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
         if (mobileMenuToggle) {
             if (sectionId === 'history-taking' && window.innerWidth <= 768) {
-                mobileMenuToggle.style.display = 'block';
+                mobileMenuToggle.classList.add('show');
             } else {
-                mobileMenuToggle.style.display = 'none';
+                mobileMenuToggle.classList.remove('show');
             }
         }
     }
@@ -364,6 +466,27 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`DEBUG: Showing section: ${sectionId}`);
     }
 
+    function showSectionWithoutSidebar(sectionId) {
+        const sections = document.querySelectorAll('.history-section');
+        sections.forEach(section => {
+            section.style.display = section.id === sectionId ? 'block' : 'none';
+        });
+
+        // Keep sidebar hidden for standalone sections like AI Tutor
+        const sidebar = document.getElementById('main-sidebar');
+        if (sidebar) {
+            sidebar.style.display = 'none';
+        }
+
+        // Scroll to top of section smoothly
+        const activeSection = document.getElementById(sectionId);
+        if (activeSection) {
+              activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        console.log(`DEBUG: Showing section without sidebar: ${sectionId}`);
+    }
+
     function updateActiveNav(activeItem) {
         const navItems = document.querySelectorAll('.history-nav li');
         navItems.forEach(item => item.classList.remove('active'));
@@ -371,6 +494,79 @@ document.addEventListener('DOMContentLoaded', function() {
             activeItem.classList.add('active');
             console.log(`DEBUG: Active nav set to: ${activeItem.getAttribute('data-section')}`);
         }
+    }
+
+    // --- Breadcrumb Navigation ---
+    function setupBreadcrumbNavigation() {
+        const breadcrumbItems = document.querySelectorAll('.breadcrumb-item');
+
+        breadcrumbItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const sectionId = item.getAttribute('data-section');
+                console.log(`DEBUG: Breadcrumb item clicked: ${sectionId}`);
+                showSection(sectionId);
+                updateActiveNav(document.querySelector(`[data-section="${sectionId}"]`));
+                updateBreadcrumbNav(sectionId);
+                // Close sidebar on mobile after selection
+                if (window.innerWidth <= 768) {
+                    toggleSidebar(false);
+                }
+            });
+        });
+
+        console.log("DEBUG: Breadcrumb navigation setup complete.");
+    }
+
+    function updateBreadcrumbNav(activeSectionId) {
+        const breadcrumbItems = document.querySelectorAll('.breadcrumb-item');
+        const sectionOrder = [
+            'patient-info', 'chief-complaint', 'present-illness', 'past-medical',
+            'past-ortho', 'medications', 'allergies', 'family-history',
+            'social-history', 'review-systems', 'examination', 'summary-diagnosis'
+        ];
+
+        const activeIndex = sectionOrder.indexOf(activeSectionId);
+
+        breadcrumbItems.forEach((item, index) => {
+            const sectionId = item.getAttribute('data-section');
+            const sectionIndex = sectionOrder.indexOf(sectionId);
+
+            // Remove all states first
+            item.classList.remove('active', 'completed');
+
+            if (sectionIndex === activeIndex) {
+                item.classList.add('active');
+            } else if (sectionIndex < activeIndex) {
+                item.classList.add('completed');
+            }
+        });
+
+        console.log(`DEBUG: Breadcrumb navigation updated for section: ${activeSectionId}`);
+    }
+
+    function updateMobileNavActive(activeSectionId) {
+        const mobileNavButtons = document.querySelectorAll('.mobile-nav-btn');
+
+        mobileNavButtons.forEach(button => {
+            const sectionId = button.getAttribute('data-section');
+            button.classList.remove('active');
+
+            // Handle special cases for section mapping
+            if (activeSectionId === sectionId) {
+                button.classList.add('active');
+            } else if (activeSectionId === 'patient-info' && sectionId === 'history-taking') {
+                // When in history taking mode, highlight the history button
+                button.classList.add('active');
+            } else if (activeSectionId === 'ai-tutor' && sectionId === 'ai-tutor') {
+                // When in AI tutor section, highlight the AI tutor button
+                button.classList.add('active');
+            } else if (activeSectionId === 'saved-cases-section' && sectionId === 'old-cases') {
+                // When in saved cases, highlight the cases button
+                button.classList.add('active');
+            }
+        });
+
+        console.log(`DEBUG: Mobile navigation updated for section: ${activeSectionId}`);
     }
 
     function navigateToPrevious() {
@@ -385,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("DEBUG: Navigating to previous section:", prevSectionId);
             showSection(prevSectionId);
             updateActiveNav(prevItem);
+            updateBreadcrumbNav(prevSectionId);
         } else {
             console.log("DEBUG: Already at the first section.");
         }
@@ -402,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("DEBUG: Navigating to next section:", nextSectionId);
             showSection(nextSectionId);
             updateActiveNav(nextItem);
+            updateBreadcrumbNav(nextSectionId);
         } else {
             console.log("DEBUG: Already at the last section.");
         }
@@ -2169,6 +2367,382 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
     // Call registration function after other initializations
     registerServiceWorker();
 
+    // --- AI Tutor Functions ---
+    let aiTutorMode = null;
+    let aiTutorActive = false;
+    let aiTutorTimer = null;
+    let aiTutorTimeRemaining = 0;
+
+    function setupAITutor() {
+        console.log("DEBUG: Setting up AI Tutor functionality...");
+
+        // Mode selection buttons
+        document.getElementById('start-exam-mode')?.addEventListener('click', () => showModePopup('exam'));
+        document.getElementById('start-learning-mode')?.addEventListener('click', () => showModePopup('learning'));
+        document.getElementById('start-dummy-mode')?.addEventListener('click', () => startAIMode('dummy'));
+
+        // Chat controls
+        document.getElementById('ai-send-message')?.addEventListener('click', sendAIMessage);
+        document.getElementById('end-ai-session')?.addEventListener('click', endAISession);
+        document.getElementById('back-to-modes')?.addEventListener('click', backToModes);
+
+        // Case selection modal
+        document.getElementById('close-case-modal')?.addEventListener('click', () => {
+            document.getElementById('case-selection-modal').style.display = 'none';
+        });
+        document.getElementById('use-current-case')?.addEventListener('click', () => useCurrentCase());
+        document.getElementById('load-saved-case')?.addEventListener('click', () => loadSavedCaseForAI());
+
+        // Mode popup
+        document.getElementById('close-mode-popup')?.addEventListener('click', () => {
+            document.getElementById('mode-popup').style.display = 'none';
+        });
+        document.getElementById('popup-go-to-history')?.addEventListener('click', () => {
+            const popup = document.getElementById('mode-popup');
+            const mode = popup.dataset.pendingMode;
+            popup.style.display = 'none';
+            navigateToDashboardSection('history-taking');
+            showNotification(`Please fill in your case details, then return to AI Tutor to start ${mode} mode.`, 'info');
+        });
+        document.getElementById('popup-load-case')?.addEventListener('click', () => {
+            const popup = document.getElementById('mode-popup');
+            const mode = popup.dataset.pendingMode;
+            popup.style.display = 'none';
+            navigateToDashboardSection('old-cases');
+            showNotification(`Please select a saved case, then return to AI Tutor to start ${mode} mode.`, 'info');
+        });
+
+        // Enter key for chat input
+        document.getElementById('ai-chat-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAIMessage();
+            }
+        });
+
+        console.log("DEBUG: AI Tutor setup complete.");
+    }
+
+    function showModePopup(mode) {
+        const popup = document.getElementById('mode-popup');
+        const title = document.getElementById('mode-popup-title');
+        const message = document.getElementById('mode-popup-message');
+
+        if (popup && title && message) {
+            title.textContent = mode === 'exam' ? 'Exam Mode' : 'Learning Mode';
+            message.textContent = mode === 'exam'
+                ? 'To start Exam Mode, you need a case. Choose an option below:'
+                : 'To start Learning Mode, you can either use your current case or start fresh. Choose an option below:';
+
+            popup.style.display = 'flex';
+
+            // Store the mode for when user makes a choice
+            popup.dataset.pendingMode = mode;
+        }
+    }
+
+    function startAIMode(mode) {
+        console.log(`DEBUG: Starting AI Tutor in ${mode} mode...`);
+        aiTutorMode = mode;
+        aiTutorActive = true;
+
+        // Hide mode selection, show chat interface
+        document.querySelector('.ai-mode-selection').style.display = 'none';
+        document.getElementById('ai-chat-interface').style.display = 'block';
+
+        // Update chat title
+        const titleElement = document.getElementById('chat-mode-title');
+        if (titleElement) {
+            switch(mode) {
+                case 'exam':
+                    titleElement.textContent = 'AI Exam Mode';
+                    break;
+                case 'learning':
+                    titleElement.textContent = 'AI Learning Mode';
+                    break;
+                case 'dummy':
+                    titleElement.textContent = 'AI Dummy Case Mode';
+                    break;
+            }
+        }
+
+        // Clear previous messages
+        const chatMessages = document.getElementById('ai-chat-messages');
+        chatMessages.innerHTML = '';
+
+        // Enable chat input
+        const chatInput = document.getElementById('ai-chat-input');
+        const sendButton = document.getElementById('ai-send-message');
+        if (chatInput) chatInput.disabled = false;
+        if (sendButton) sendButton.disabled = false;
+
+        // Start appropriate mode
+        switch(mode) {
+            case 'exam':
+                startExamMode();
+                break;
+            case 'learning':
+                startLearningMode();
+                break;
+            case 'dummy':
+                startDummyMode();
+                break;
+        }
+
+        showNotification(`AI ${mode} mode started!`, 'success');
+    }
+
+    function startExamMode() {
+        // Show case selection modal
+        document.getElementById('case-selection-modal').style.display = 'flex';
+    }
+
+    function startLearningMode() {
+        addAIMessage("Welcome to Learning Mode! I'm here to help you learn about orthopedic history taking, examination, investigations, and management. What would you like to know?", "ai");
+        document.getElementById('ai-chat-input').focus();
+    }
+
+    function startDummyMode() {
+        addAIMessage("Welcome to Dummy Case Mode! Describe the type of orthopedic case you'd like me to generate. For example: 'fractured tibia in a 25 year old male', 'polytrauma', or 'pediatric osteomyelitis'.", "ai");
+        document.getElementById('ai-chat-input').focus();
+    }
+
+    function useCurrentCase() {
+        document.getElementById('case-selection-modal').style.display = 'none';
+
+        const caseData = collectFormData();
+        if (!caseData['patient-name'] && !caseData['cc-notes']) {
+            showNotification('Please fill in at least patient name and chief complaint before starting exam mode.', 'warning');
+            backToModes();
+            return;
+        }
+
+        // Start exam with current case
+        const welcomeMessage = `Welcome to Exam Mode! I'll ask you questions based on your current case. Let's begin with the first question...`;
+        addAIMessage(welcomeMessage, "ai");
+
+        // Start timer
+        startAITimer(7 * 60); // 7 minutes
+
+        // Get first AI question
+        getAIExamQuestion(caseData);
+    }
+
+    function loadSavedCaseForAI() {
+        document.getElementById('case-selection-modal').style.display = 'none';
+        navigateToDashboardSection('old-cases');
+        showNotification('Please select a saved case to use with AI Tutor.', 'info');
+    }
+
+    function sendAIMessage() {
+        if (!aiTutorActive) return;
+
+        const chatInput = document.getElementById('ai-chat-input');
+        const messageText = chatInput.value.trim();
+
+        if (messageText) {
+            addAIMessage(messageText, "student");
+            chatInput.value = '';
+
+            // Handle different modes
+            switch(aiTutorMode) {
+                case 'learning':
+                    handleLearningMode(messageText);
+                    break;
+                case 'dummy':
+                    handleDummyMode(messageText);
+                    break;
+                case 'exam':
+                    handleExamMode(messageText);
+                    break;
+            }
+        }
+    }
+
+    function handleLearningMode(message) {
+        // Add typing indicator
+        addTypingIndicator();
+
+        // Simulate AI response (replace with actual API call)
+        setTimeout(() => {
+            removeTypingIndicator();
+            const responses = [
+                "That's a great question! Let me explain...",
+                "In orthopedic practice, we typically...",
+                "The key principles to remember are...",
+                "Based on the latest guidelines...",
+                "Let me walk you through this step by step..."
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            addAIMessage(randomResponse + " This is a placeholder response. The actual AI integration would provide detailed, accurate medical information.", "ai");
+        }, 1500);
+    }
+
+    function handleDummyMode(message) {
+        addTypingIndicator();
+
+        setTimeout(() => {
+            removeTypingIndicator();
+            const dummyResponse = `Generating a dummy case based on: "${message}"
+
+**Patient Demographics:**
+- Name: John Smith
+- Age: 28 years
+- Gender: Male
+- Occupation: Construction worker
+
+**Chief Complaint:**
+"Severe left knee pain and swelling after falling from scaffolding 3 days ago"
+
+**History of Present Illness:**
+- Sudden onset of pain while working
+- Unable to bear weight on left leg
+- Pain described as sharp, 8/10 severity
+- Swelling developed immediately after injury
+
+Would you like me to continue with the full case details, or would you prefer to start taking history on this patient?`;
+
+            addAIMessage(dummyResponse, "ai");
+        }, 2000);
+    }
+
+    function handleExamMode(message) {
+        addTypingIndicator();
+
+        setTimeout(() => {
+            removeTypingIndicator();
+            const examResponses = [
+                "Good answer! Now, can you tell me about the mechanism of injury in more detail?",
+                "That's correct. What would be your next step in the physical examination?",
+                "Excellent point. How would you differentiate this from other possible diagnoses?",
+                "Well done! What investigations would you order at this stage?",
+                "Good thinking. What would be your initial management plan?"
+            ];
+            const randomResponse = examResponses[Math.floor(Math.random() * examResponses.length)];
+            addAIMessage(randomResponse, "ai");
+        }, 1500);
+    }
+
+    function addAIMessage(text, sender, isSystem = false) {
+        const chatMessages = document.getElementById('ai-chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        if (isSystem) {
+            messageDiv.classList.add('system');
+        }
+        messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const chatMessages = document.getElementById('ai-chat-messages');
+        const indicator = document.createElement('div');
+        indicator.className = 'message ai typing-indicator';
+        indicator.innerHTML = '<span></span><span></span><span></span>';
+        indicator.id = 'typing-indicator';
+        chatMessages.appendChild(indicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    function startAITimer(duration) {
+        aiTutorTimeRemaining = duration;
+        updateAITimerDisplay();
+
+        aiTutorTimer = setInterval(() => {
+            aiTutorTimeRemaining--;
+            updateAITimerDisplay();
+
+            if (aiTutorTimeRemaining <= 0) {
+                clearInterval(aiTutorTimer);
+                showAIContinuePrompt();
+            }
+        }, 1000);
+    }
+
+    function updateAITimerDisplay() {
+        const timerDisplay = document.getElementById('chat-timer-display');
+        if (timerDisplay) {
+            const minutes = Math.floor(aiTutorTimeRemaining / 60);
+            const seconds = aiTutorTimeRemaining % 60;
+            timerDisplay.textContent = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    function showAIContinuePrompt() {
+        const promptDiv = document.getElementById('ai-continue-prompt');
+        if (promptDiv) {
+            promptDiv.style.display = 'block';
+        }
+
+        // Add event listeners for continue buttons
+        document.getElementById('ai-continue-btn')?.addEventListener('click', () => {
+            promptDiv.style.display = 'none';
+            startAITimer(5 * 60); // Add 5 more minutes
+            showNotification('Extended session by 5 minutes!', 'info');
+        });
+
+        document.getElementById('ai-force-end-btn')?.addEventListener('click', () => {
+            endAISession();
+        });
+    }
+
+    function endAISession() {
+        console.log("DEBUG: Ending AI Tutor session...");
+        aiTutorActive = false;
+        aiTutorMode = null;
+
+        if (aiTutorTimer) {
+            clearInterval(aiTutorTimer);
+            aiTutorTimer = null;
+        }
+
+        // Reset UI
+        document.querySelector('.ai-mode-selection').style.display = 'block';
+        document.getElementById('ai-chat-interface').style.display = 'none';
+
+        // Disable chat input
+        const chatInput = document.getElementById('ai-chat-input');
+        const sendButton = document.getElementById('ai-send-message');
+        if (chatInput) chatInput.disabled = true;
+        if (sendButton) sendButton.disabled = true;
+
+        // Hide continue prompt
+        const promptDiv = document.getElementById('ai-continue-prompt');
+        if (promptDiv) {
+            promptDiv.style.display = 'none';
+        }
+
+        showNotification('AI Tutor session ended.', 'info');
+    }
+
+    function backToModes() {
+        endAISession();
+        // The endAISession function already handles showing the mode selection
+    }
+
+    function getAIExamQuestion(caseData) {
+        // This would be replaced with actual API call to get AI question
+        setTimeout(() => {
+            const questions = [
+                "Can you summarize the patient's chief complaint and duration of symptoms?",
+                "What was the mechanism of injury in this case?",
+                "What are the key points you'd want to cover in the history of present illness?",
+                "What would be your differential diagnosis at this stage?",
+                "What physical examination findings would you expect?"
+            ];
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            addAIMessage(randomQuestion, "ai");
+        }, 2000);
+    }
+
     // --- Profile Menu Functions ---
     function toggleProfileDropdown() {
         if (profileDropdown) {
@@ -2199,12 +2773,12 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
             profileName.textContent = 'Student';
         }
     }
-    
+
     // Update global header auth UI
     function updateGlobalAuthUI() {
         const profileMenu = document.getElementById('global-profile-menu');
         const authButtons = document.getElementById('global-auth-buttons');
-    
+
         if (currentUserToken) {
             // Logged in: show profile menu, hide auth buttons
             if (profileMenu) profileMenu.style.display = 'block';
