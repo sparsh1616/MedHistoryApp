@@ -703,7 +703,13 @@ footer p {
 
 /* Ensure dashboard is visible by default */
 #dashboard {
-    display: block;
+    display: block !important;
+}
+
+/* Ensure dashboard content is properly positioned */
+.dashboard-section.active {
+    display: block !important;
+    padding-top: 20px;
 }
 
 .dashboard-header {
@@ -1252,7 +1258,11 @@ footer p {
 
 main {
     margin-top: 0;
-    padding-top: 0;
+    padding-top: 20px;
+}
+
+.content-area {
+    padding-top: 20px;
 }
 
 /* Global Navigation Dropdown */
