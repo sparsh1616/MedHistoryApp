@@ -2372,6 +2372,7 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
     let aiTutorActive = false;
     let aiTutorTimer = null;
     let aiTutorTimeRemaining = 0;
+    let isGenerating = false; // Flag for send button state
 
     function setupAITutor() {
         console.log("DEBUG: Setting up AI Tutor functionality...");
@@ -2413,13 +2414,22 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
         });
 
         // Enter key for chat input
+        // Auto-resize textarea
+        const aiChatInput = document.getElementById('ai-chat-input');
+        if (aiChatInput) {
+            aiChatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+    
         document.getElementById('ai-chat-input')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendAIMessage();
             }
         });
-
+    
         console.log("DEBUG: AI Tutor setup complete.");
     }
 
@@ -2461,7 +2471,7 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
                     titleElement.textContent = 'AI Learning Mode';
                     break;
                 case 'dummy':
-                    titleElement.textContent = 'AI Dummy Case Mode';
+                    titleElement.textContent = 'AI Dummy Mode';
                     break;
             }
         }
@@ -2535,12 +2545,19 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
     }
 
     function sendAIMessage() {
-        if (!aiTutorActive) return;
+        if (!aiTutorActive || isGenerating) return;
 
         const chatInput = document.getElementById('ai-chat-input');
+        const sendButton = document.getElementById('ai-send-message');
         const messageText = chatInput.value.trim();
 
         if (messageText) {
+            // Set generating state
+            isGenerating = true;
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Loading spinner
+
             addAIMessage(messageText, "student");
             chatInput.value = '';
 
@@ -2603,6 +2620,18 @@ Format the output so it can be easily parsed, perhaps using markdown-like headin
 Would you like me to continue with the full case details, or would you prefer to start taking history on this patient?`;
 
             addAIMessage(dummyResponse, "ai");
+            // Reset button state
+            const sendButton = document.getElementById('ai-send-message');
+            if (sendButton) {
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                sendButton.disabled = false;
+            }
+            isGenerating = false;
+            const chatInput = document.getElementById('ai-chat-input');
+            if (chatInput) {
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
         }, 2000);
     }
 
@@ -2620,6 +2649,18 @@ Would you like me to continue with the full case details, or would you prefer to
             ];
             const randomResponse = examResponses[Math.floor(Math.random() * examResponses.length)];
             addAIMessage(randomResponse, "ai");
+            // Reset button state
+            const sendButton = document.getElementById('ai-send-message');
+            if (sendButton) {
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                sendButton.disabled = false;
+            }
+            isGenerating = false;
+            const chatInput = document.getElementById('ai-chat-input');
+            if (chatInput) {
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
         }, 1500);
     }
 
@@ -2726,6 +2767,40 @@ Would you like me to continue with the full case details, or would you prefer to
     function backToModes() {
         endAISession();
         // The endAISession function already handles showing the mode selection
+    }
+    
+    // Reset send button state on session end
+    function endAISession() {
+        console.log("DEBUG: Ending AI Tutor session...");
+        aiTutorActive = false;
+        aiTutorMode = null;
+        isGenerating = false; // Reset generating flag
+    
+        if (aiTutorTimer) {
+            clearInterval(aiTutorTimer);
+            aiTutorTimer = null;
+        }
+    
+        // Reset UI
+        document.querySelector('.ai-mode-selection').style.display = 'block';
+        document.getElementById('ai-chat-interface').style.display = 'none';
+    
+        // Disable chat input
+        const chatInput = document.getElementById('ai-chat-input');
+        const sendButton = document.getElementById('ai-send-message');
+        if (chatInput) chatInput.disabled = true;
+        if (sendButton) {
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>'; // Reset icon
+        }
+    
+        // Hide continue prompt
+        const promptDiv = document.getElementById('ai-continue-prompt');
+        if (promptDiv) {
+            promptDiv.style.display = 'none';
+        }
+    
+        showNotification('AI Tutor session ended.', 'info');
     }
 
     function getAIExamQuestion(caseData) {

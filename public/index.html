@@ -582,11 +582,7 @@
 
                 <!-- AI Tutor Section -->
                 <div id="ai-tutor" class="history-section">
-                    <div class="ai-tutor-header">
-                        <h2>AI Tutor</h2>
-                        <p>Get instant feedback and guidance on your cases</p>
-                    </div>
-
+                
                     <!-- Mode Selection -->
                     <div class="ai-mode-selection">
                         <h3>Select AI Session Mode:</h3>
@@ -602,25 +598,33 @@
                             </button>
                         </div>
                     </div>
-
+                
                     <!-- Chat Interface (Hidden initially) -->
                     <div id="ai-chat-interface" class="ai-chat-interface" style="display: none;">
                         <div class="chat-header">
                             <h3 id="chat-mode-title">AI Tutor Session</h3>
-                            <div id="chat-timer-display" class="timer-display">Time: 07:00</div>
                         </div>
                         <div class="chat-window">
                             <div class="chat-messages" id="ai-chat-messages">
-                                <div class="message ai">Welcome to the AI Tutor! Select a mode above to begin your session.</div>
+                                <div class="message ai">
+                                    <i class="fas fa-robot message-icon"></i>
+                                    Welcome to the AI Tutor! Select a mode above to begin your session.
+                                </div>
                             </div>
                             <div class="chat-input-area">
-                                <textarea id="ai-chat-input" placeholder="Type your response here..." rows="3" disabled></textarea>
-                                <button id="ai-send-message" class="btn primary" disabled>Send</button>
+                                <textarea id="ai-chat-input" placeholder="Type your response here..." rows="1" disabled></textarea>
+                                <button id="ai-send-message" class="btn primary send-icon-btn" disabled>
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
                             </div>
                         </div>
                         <div id="ai-chat-controls">
-                            <button id="end-ai-session" class="btn secondary">End Session</button>
-                            <button id="back-to-modes" class="btn secondary">Back to Modes</button>
+                            <button id="end-ai-session" class="btn secondary" title="End Session">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                            <button id="back-to-modes" class="btn secondary" title="Back to Modes">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
                             <div id="ai-continue-prompt" style="display: none; margin-top: 10px; padding: 10px; background-color: #e9f7fe; border-radius: 4px; text-align: center;">
                                 <p>Time's up! Would you like to continue for 5 more minutes?</p>
                                 <button id="ai-continue-btn" class="btn primary small-btn">Continue (+5 min)</button>
@@ -628,7 +632,7 @@
                             </div>
                         </div>
                     </div>
-
+                
                     <!-- Case Selection Modal for Exam Mode -->
                     <div id="case-selection-modal" class="modal" style="display: none;">
                         <div class="modal-content">
@@ -648,7 +652,7 @@
                             </div>
                         </div>
                     </div>
-
+                
                     <!-- Mode Selection Popup -->
                     <div id="mode-popup" class="mode-popup" style="display: none;">
                         <div class="mode-popup-content">
