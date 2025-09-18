@@ -4195,3 +4195,62 @@ footer p {
     justify-content: flex-end;
     gap: 1rem;
 }
+
+/* ===========================================
+   CUSTOM MOBILE UI IMPROVEMENTS (2x3 Grid)
+   =========================================== */
+
+@media (max-width: 768px) {
+    /* --- 1. 2x3 Grid Dashboard Layout --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        gap: 1rem; /* Professional spacing between cards */
+    }
+
+    .dashboard-card {
+        padding: 1rem;
+        aspect-ratio: 1 / 1; /* Make the card a perfect square */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Center content vertically */
+        align-items: center; /* Center content horizontally */
+        text-align: center;
+    }
+
+    .card-icon {
+        font-size: 2.5rem; /* Larger icon */
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-card h3 {
+        font-size: 1rem; /* Clear, readable font size */
+        margin: 0;
+    }
+
+    /* Hide the action buttons and paragraph text on mobile */
+    .dashboard-card .card-btn,
+    .dashboard-card p {
+        display: none;
+    }
+
+    /* --- 2. Improved Mobile Bottom Navigation (from previous step) --- */
+    .mobile-nav-container {
+        justify-content: space-around;
+        align-items: flex-start;
+    }
+
+    .mobile-nav-btn {
+        flex: 1;
+        padding: 0.5rem 0.25rem;
+        min-height: 60px;
+    }
+
+    .mobile-nav-btn span {
+        font-size: 0.7rem;
+        line-height: 1.1;
+        word-break: break-word;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+    }
+}

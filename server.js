@@ -7,7 +7,7 @@ const OpenAI = require('openai'); // Use OpenAI-compatible API (Groq)
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001; // Changed default port to 3001
+const PORT = process.env.PORT || 3002; // Changed default port to 3002
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_fallback';
 const GROQ_API_KEY = process.env.GROQ_API_KEY; // Load Groq key
